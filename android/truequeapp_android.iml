@@ -20,6 +20,9 @@
       <sourceFolder url="file://$MODULE_DIR$/app/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/app/src/main/kotlin" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
+      <excludeFolder url="file://$MODULE_DIR$/.gradle/8.14/executionHistory" />
+      <excludeFolder url="file://$MODULE_DIR$/.gradle/8.14/expanded" />
+      <excludeFolder url="file://$MODULE_DIR$/.gradle/8.14/vcsMetadata" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
