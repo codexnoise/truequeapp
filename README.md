@@ -1,6 +1,6 @@
 # truequeapp
 
-A new Flutter project.
+A simple app to exchange and donations
 
 ## Getting Started
 

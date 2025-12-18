@@ -1,4 +1,4 @@
-package com.example.truequeapp
+package com.truequeapp.truequeapp
 
 import io.flutter.embedding.android.FlutterActivity
 
