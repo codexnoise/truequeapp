@@ -15,8 +15,8 @@ Future<void> init() async {
 
   // Use cases (Business Logic)
   // We use registerLazySingleton so they are only created when needed
-  sl.registerLazySingleton(() => LoginUseCase(sl()));
-  sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  //sl.registerLazySingleton(() => LoginUseCase(sl()));
+  //sl.registerLazySingleton(() => RegisterUseCase(sl()));
 
   // Repositories (Contracts implementation)
   // We register the implementation linked to the abstract contract
