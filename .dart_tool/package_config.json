@@ -110,6 +110,12 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "get_it",
+      "rootUri": "file:///Users/macbookpro/.pub-cache/hosted/pub.dev/get_it-9.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "http",
       "rootUri": "file:///Users/macbookpro/.pub-cache/hosted/pub.dev/http-1.6.0",
       "packageUri": "lib/",
