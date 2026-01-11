@@ -182,6 +182,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "go_router",
+      "rootUri": "file:///Users/macbookpro/.pub-cache/hosted/pub.dev/go_router-17.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
       "name": "http",
       "rootUri": "file:///Users/macbookpro/.pub-cache/hosted/pub.dev/http-1.6.0",
       "packageUri": "lib/",

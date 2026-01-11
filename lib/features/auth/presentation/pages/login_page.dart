@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -78,7 +79,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: const Text('SIGN IN'),
                 ),
               TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/register'), // O tu lógica de rutas
+                onPressed: () => context.push('/register'),
                 child: const Text('CREATE ACCOUNT', style: TextStyle(color: Colors.black54)),
               ),
             ],
