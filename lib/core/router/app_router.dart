@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../features/auth/presentation/pages/login_page.dart';
 import '../../../features/auth/presentation/pages/register_page.dart';
 import '../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/presentation/pages/home_page.dart';
 
 /// Provider that manages the global routing configuration.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -11,10 +12,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/login',
+
     /// Handles automatic redirects based on the current authentication state.
     redirect: (context, state) {
-      final bool isAuthPath = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+      final bool isAuthPath =
+          state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
       if (authState is AuthAuthenticated) {
         // Redirect to home if user is already authenticated
@@ -29,25 +31,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterPage(),
-      ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text(
-              'HOME',
-              style: TextStyle(letterSpacing: 4, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
+      GoRoute(path: '/home', builder: (context, state) => const HomePage()),
     ],
   );
 });
