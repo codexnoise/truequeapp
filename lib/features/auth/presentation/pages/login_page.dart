@@ -64,6 +64,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 validator: (value) => value!.length < 6 ? 'Too short' : null,
               ),
               const SizedBox(height: 32),
+              Row(
+                children: [
+                  Checkbox(
+                    // Watches the boolean value
+                    value: ref.watch(rememberMeProvider),
+                    activeColor: Colors.black,
+                    onChanged: (value) {
+                      // Uses the explicit method from the notifier
+                      if (value != null) {
+                        ref.read(rememberMeProvider.notifier).toggle(value);
+                      }
+                    },
+                  ),
+                  const Text('KEEP ME SIGNED IN', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+                ],
+              ),
+              const SizedBox(height: 16),
               if (state is AuthLoading)
                 const Center(child: CircularProgressIndicator(color: Colors.black))
               else
@@ -73,6 +90,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ref.read(authProvider.notifier).login(
                         _emailController.text.trim(),
                         _passwordController.text.trim(),
+                        ref.read(rememberMeProvider),
                       );
                     }
                   },

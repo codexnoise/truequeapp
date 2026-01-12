@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -30,13 +31,18 @@ class AuthNotifier extends Notifier<AuthState> {
     return AuthInitial();
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, bool rememberMe) async {
     state = AuthLoading();
     try {
       // We get the UseCase from our Service Locator (GetIt)
       final user = await sl<LoginUseCase>().execute(email, password);
 
       if (user != null) {
+        if (rememberMe) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('keep_session', true);
+        }
+
         state = AuthAuthenticated(user);
       } else {
         state = const AuthError("Invalid credentials");
@@ -62,6 +68,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   void logout() async {
     // Logic for sign out
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('keep_session');
     state = AuthInitial();
   }
 }
@@ -69,4 +77,21 @@ class AuthNotifier extends Notifier<AuthState> {
 /// Global provider using the new NotifierProvider
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {
   return AuthNotifier();
+});
+
+
+/// Modern way to manage a simple boolean state in Riverpod 3.0
+/// This replaces StateProvider and avoids legacy imports
+class RememberMeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false; // Initial state
+
+  void toggle(bool? value) {
+    state = value ?? false;
+  }
+}
+
+/// Global provider for the Remember Me checkbox
+final rememberMeProvider = NotifierProvider<RememberMeNotifier, bool>(() {
+  return RememberMeNotifier();
 });
