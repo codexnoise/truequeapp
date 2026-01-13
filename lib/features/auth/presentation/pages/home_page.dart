@@ -13,7 +13,7 @@ class HomePage extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'BARTER',
+          'TRUEQUEAPP',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, letterSpacing: 2),
         ),
         actions: [
@@ -65,6 +65,7 @@ class HomePage extends ConsumerWidget {
                   _CategoryChip(label: 'Fashion'),
                   _CategoryChip(label: 'Home'),
                   _CategoryChip(label: 'Books'),
+                  _CategoryChip(label: 'Music'),
                 ],
               ),
             ),
