@@ -1,16 +1,45 @@
-# truequeapp
+# TRUEQUEAPP
 
-A simple app to exchange and donations
+TRUEQUEAPP is a mobile application built with Flutter, designed for trading and exchanging items between users.
 
-## Getting Started
+## Project Structure
 
-This project is a starting point for a Flutter application.
+This project follows the principles of Clean Architecture, organized by features to ensure a scalable and maintainable codebase.
 
-A few resources to get you started if this is your first Flutter project:
+```
+lib/
+|
+|-- core/
+|   |-- di/                       # Dependency Injection setup (GetIt)
+|   |-- router/                   # App navigation logic (GoRouter)
+|
+|-- features/
+|   |-- auth/
+|   |   |-- data/                 # Data sources (remote/local) and repository implementations
+|   |   |-- domain/               # Core business logic (entities, repositories, use cases)
+|   |   |-- presentation/         # UI (pages, widgets) and state management (Riverpod Notifiers)
+|
+|-- main.dart                     # Main entry point of the application
+|
+|-- firebase_options.dart         # Firebase configuration
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Core
+The `core` directory contains shared code used across multiple features, such as dependency injection, navigation, and base classes.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Features
+Each feature is a self-contained module representing a specific functionality of the app (e.g., `auth`, `items`, `profile`). This modular approach makes it easier to develop and test features in isolation.
+
+Each feature folder is divided into three layers:
+-   **Data**: Implements the repository contracts defined in the domain layer. It fetches data from sources like Firebase and exposes it to the rest of the app.
+-   **Domain**: Contains the core business logic. This includes entities (the business objects), repository contracts (interfaces), and use cases (the application-specific business rules).
+-   **Presentation**: Handles the UI and user interaction. It uses Riverpod for state management to react to state changes and display the appropriate UI to the user.
+
+## Tech Stack
+
+-   **Framework**: Flutter
+-   **State Management**: Riverpod
+-   **Backend & Authentication**: Firebase
+-   **Navigation**: GoRouter
+-   **Dependency Injection**: GetIt
+-   **Architecture**: Clean Architecture (Feature-driven)
