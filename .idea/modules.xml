@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/truequeapp.iml" filepath="$PROJECT_DIR$/truequeapp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/truequeapp_android.iml" filepath="$PROJECT_DIR$/android/truequeapp_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/truequeapp.iml" filepath="$PROJECT_DIR$/.idea/truequeapp.iml" />
     </modules>
   </component>
 </project>

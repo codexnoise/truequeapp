@@ -29,7 +29,7 @@ class HomePage extends ConsumerWidget {
       ),
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             // 1. Buscador
             Padding(
@@ -149,7 +149,7 @@ class _ItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Expanded(
             child: Container(
@@ -163,7 +163,7 @@ class _ItemCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 const Text('iPhone 13 Pro', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 4),

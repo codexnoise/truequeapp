@@ -42,13 +42,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: .center,
+            crossAxisAlignment: .stretch,
             children: [
               const Text(
                 'LOGIN',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2),
-                textAlign: TextAlign.center,
+                textAlign: .center,
               ),
               const SizedBox(height: 48),
               TextFormField(
