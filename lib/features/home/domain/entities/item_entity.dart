@@ -5,7 +5,7 @@ class ItemEntity {
   final String description;
   final String categoryId;
   final List<String> imageUrls;
-  final String desiredItem; // Lo que busca el usuario a cambio
+  final String desiredItem;
   final String status;
 
   const ItemEntity({
