@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/home_provider.dart';
+import '../widgets/item_card_widget.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -73,17 +75,32 @@ class HomePage extends ConsumerWidget {
             // 3. Feed de Productos
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: 4, // Placeholder count
-                itemBuilder: (context, index) => const _ItemCard(),
+              child: ref.watch(itemsStreamProvider).when(
+                // 1. Cuando hay datos reales
+                data: (items) {
+                  if (items.isEmpty) {
+                    return const Center(child: Text("No items available for trade"));
+                  }
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return ItemCard(item: item);
+                    },
+                  );
+                },
+                // 2. Mientras carga
+                loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                // 3. Si ocurre un error
+                error: (err, stack) => Center(child: Text("Error: $err")),
               ),
             ),
           ],
@@ -132,46 +149,6 @@ class _CategoryChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-}
-
-// Widget para la tarjeta de producto
-class _ItemCard extends StatelessWidget {
-  const _ItemCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: const Center(child: Icon(Icons.image, color: Colors.grey)), // Placeholder image
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              crossAxisAlignment: .start,
-              children: [
-                const Text('iPhone 13 Pro', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 4),
-                Text('Trade for: Laptop', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-              ],
-            ),
-          )
-        ],
       ),
     );
   }
