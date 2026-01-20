@@ -5,6 +5,9 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
+import '../../features/home/domain/repositories/home_repository.dart';
+import '../../features/home/domain/repositories/home_repository_impl.dart';
+import '../../features/home/domain/usecases/get_items_usecase.dart';
 
 // sl stands for Service Locator
 final sl = GetIt.instance;
@@ -17,6 +20,8 @@ Future<void> init() async {
   // We use registerLazySingleton so they are only created when needed
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
+
+  setupHomeDependencies();
 
   // Repositories (Contracts implementation)
   // We register the implementation linked to the abstract contract
@@ -31,4 +36,13 @@ Future<void> init() async {
 
   // External (Third-party plugins)
   sl.registerLazySingleton(() => FirebaseAuth.instance);
+}
+
+
+void setupHomeDependencies() {
+  // Repository
+  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
+
+  // UseCases
+  sl.registerLazySingleton(() => GetItemsUseCase(sl()));
 }
