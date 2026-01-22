@@ -61,6 +61,7 @@ class AddItemPage extends ConsumerWidget {
             ElevatedButton(
               // Use the declared variable 'addItemState'
               onPressed: addItemState is AddItemLoading ? null : () {
+                //todo: here handle, add images from phone
                 //_handleUpload(ref);
               },
               style: ElevatedButton.styleFrom(
