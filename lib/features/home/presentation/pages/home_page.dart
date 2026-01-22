@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/item_card_widget.dart';
@@ -109,11 +110,12 @@ class HomePage extends ConsumerWidget {
 
       // 4. Botón para agregar artículo
       floatingActionButton: FloatingActionButton(
+        onPressed: () => context.pushNamed('add-item'),
         backgroundColor: Colors.black,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () {},
       ),
-
       // 5. Navegación inferior
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.black,
