@@ -7,6 +7,7 @@ import '../../features/auth/domain/usecases/login_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/repositories/home_repository_impl.dart';
+import '../../features/home/domain/usecases/add_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
 
 // sl stands for Service Locator
@@ -45,4 +46,5 @@ void setupHomeDependencies() {
 
   // UseCases
   sl.registerLazySingleton(() => GetItemsUseCase(sl()));
+  sl.registerLazySingleton(() => AddItemUseCase(sl()));
 }

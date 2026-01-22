@@ -19,4 +19,21 @@ class HomeRepositoryImpl implements HomeRepository {
               .toList();
         });
   }
+
+  @override
+  Future<void> addItem(ItemEntity item) async {
+    // We convert the entity to a Model to use the toFirestore() helper
+    final model = ItemModel(
+      id: '', // Firestore generates this automatically
+      ownerId: item.ownerId,
+      title: item.title,
+      description: item.description,
+      categoryId: item.categoryId,
+      imageUrls: item.imageUrls,
+      desiredItem: item.desiredItem,
+      status: 'available',
+    );
+
+    await _firestore.collection('items').add(model.toFirestore());
+  }
 }
