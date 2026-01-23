@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../home/domain/entities/item_entity.dart';
@@ -26,12 +28,12 @@ class AddItemNotifier extends Notifier<AddItemState> {
   }
 
   /// Handles the item creation logic
-  Future<void> uploadItem(ItemEntity item) async {
+  Future<void> uploadItem(ItemEntity item, List<File> imageFiles) async {
     state = AddItemLoading();
 
     try {
       // Accessing UseCase via Service Locator as per your Auth architecture
-      await sl<AddItemUseCase>().execute(item);
+      await sl<AddItemUseCase>().execute(item, imageFiles);
 
       state = AddItemSuccess();
     } catch (e) {

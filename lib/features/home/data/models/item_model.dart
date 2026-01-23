@@ -27,6 +27,32 @@ class ItemModel extends ItemEntity {
     );
   }
 
+  factory ItemModel.fromEntity(ItemEntity entity) {
+    return ItemModel(
+      id: entity.id,
+      ownerId: entity.ownerId,
+      title: entity.title,
+      description: entity.description,
+      categoryId: entity.categoryId,
+      imageUrls: entity.imageUrls,
+      desiredItem: entity.desiredItem,
+      status: entity.status,
+    );
+  }
+
+  ItemModel copyWith({String? id, List<String>? imageUrls, String? status}) {
+    return ItemModel(
+      id: id ?? this.id,
+      ownerId: ownerId,
+      title: title,
+      description: description,
+      categoryId: categoryId,
+      imageUrls: imageUrls ?? this.imageUrls,
+      desiredItem: desiredItem,
+      status: status ?? this.status,
+    );
+  }
+
   Map<String, dynamic> toFirestore() {
     return {
       'ownerId': ownerId,
