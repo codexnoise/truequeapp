@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../domain/entities/item_entity.dart';
 import '../providers/add_item_provider.dart';
 
 class AddItemPage extends ConsumerStatefulWidget {
@@ -30,9 +31,26 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     }
   }
 
+  void _submit() {
+    if (_images.isEmpty) return;
+
+    // final newItem = ItemEntity(
+    //   id: '',
+    //   ownerId: 'current_user_id', // Integrate with your AuthProvider later
+    //   title: _titleController.text.trim(),
+    //   description: _descController.text.trim(),
+    //   categoryId: 'general',
+    //   imageUrls: [],
+    //   desiredItem: _lookingForController.text.trim(),
+    //   status: 'available',
+    // );
+    //
+    // ref.read(addItemProvider.notifier).uploadItem(newItem, _images);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(addItemProvider);
+    final uploadState = ref.watch(addItemProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -48,11 +66,37 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
               "${_images.length}/5 images",
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            // ... rest of your inputs (Title, Description, etc)
+
+            const SizedBox(height: 32),
+
+            // Minimal Inputs
+            _CustomTextField(label: 'TITLE', hint: 'e.g. Vintage Camera'),
+            _CustomTextField(label: 'LOOKING FOR', hint: 'What do you want in exchange?'),
+            _CustomTextField(label: 'DESCRIPTION', hint: 'Describe condition...', maxLines: 4),
+
+            const SizedBox(height: 40),
+
+            // Action Button
+            ElevatedButton(
+              onPressed: uploadState is AddItemLoading ? null : () => _submit(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 60),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: uploadState is AddItemLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+                  : const Text('POST ITEM'),
+            ),
           ],
         ),
       ),
-      bottomSheet: _buildBottomButton(state),
+      bottomSheet: _buildBottomButton(uploadState),
     );
   }
 
@@ -133,6 +177,36 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         child: state is AddItemLoading
             ? const CircularProgressIndicator()
             : const Text("POST ITEM"),
+      ),
+    );
+  }
+}
+
+class _CustomTextField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final int maxLines;
+
+  const _CustomTextField({required this.label, required this.hint, this.maxLines = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+          TextField(
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFEEEEEE))),
+              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.black)),
+            ),
+          ),
+        ],
       ),
     );
   }
