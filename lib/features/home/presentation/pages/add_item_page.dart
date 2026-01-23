@@ -19,15 +19,19 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   Future<void> _pickImage() async {
     if (_images.length >= 5) return;
 
-    // imageQuality: 50 reduces size significantly with minimal mobile visual loss
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+    // pickMultiImage allows selecting multiple images at once.
+    final pickedFiles = await _picker.pickMultiImage(
       imageQuality: 50,
       maxWidth: 1080,
     );
 
-    if (pickedFile != null) {
-      setState(() => _images.add(File(pickedFile.path)));
+    if (pickedFiles.isNotEmpty) {
+      setState(() {
+        // Add all selected images, respecting the limit of 5.
+        _images.addAll(
+          pickedFiles.map((file) => File(file.path)).take(5 - _images.length),
+        );
+      });
     }
   }
 
@@ -71,28 +75,18 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
 
             // Minimal Inputs
             _CustomTextField(label: 'TITLE', hint: 'e.g. Vintage Camera'),
-            _CustomTextField(label: 'LOOKING FOR', hint: 'What do you want in exchange?'),
-            _CustomTextField(label: 'DESCRIPTION', hint: 'Describe condition...', maxLines: 4),
+            _CustomTextField(
+              label: 'LOOKING FOR',
+              hint: 'What do you want in exchange?',
+            ),
+            _CustomTextField(
+              label: 'DESCRIPTION',
+              hint: 'Describe condition...',
+              maxLines: 4,
+            ),
 
             const SizedBox(height: 40),
 
-            // Action Button
-            ElevatedButton(
-              onPressed: uploadState is AddItemLoading ? null : () => _submit(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: uploadState is AddItemLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-                  : const Text('POST ITEM'),
-            ),
           ],
         ),
       ),
@@ -165,8 +159,12 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     // Disable if loading or if no images selected
     final bool canUpload = state is! AddItemLoading && _images.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+      ),
       child: ElevatedButton(
         onPressed: canUpload
             ? () {
@@ -174,6 +172,13 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
                 // ref.read(addItemProvider.notifier).uploadItem(item, _images);
               }
             : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 64),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 0,
+        ),
         child: state is AddItemLoading
             ? const CircularProgressIndicator()
             : const Text("POST ITEM"),
@@ -187,7 +192,11 @@ class _CustomTextField extends StatelessWidget {
   final String hint;
   final int maxLines;
 
-  const _CustomTextField({required this.label, required this.hint, this.maxLines = 1});
+  const _CustomTextField({
+    required this.label,
+    required this.hint,
+    this.maxLines = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -196,14 +205,21 @@ class _CustomTextField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+          ),
           TextField(
             maxLines: maxLines,
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFEEEEEE))),
-              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.black)),
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFEEEEEE)),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.black),
+              ),
             ),
           ),
         ],
