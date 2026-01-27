@@ -18,10 +18,10 @@ class HomeRepositoryImpl implements HomeRepository {
         .where('status', isEqualTo: 'available')
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => ItemModel.fromFirestore(doc))
-              .toList();
-        });
+      return snapshot.docs
+          .map((doc) => ItemModel.fromFirestore(doc))
+          .toList();
+    });
   }
 
   @override
@@ -37,20 +37,5 @@ class HomeRepositoryImpl implements HomeRepository {
     // 2. Add item to Firestore with the new URLs
     final model = ItemModel.fromEntity(item).copyWith(imageUrls: uploadedUrls);
     await _firestore.collection('items').add(model.toFirestore());
-
-
-    // We convert the entity to a Model to use the toFirestore() helper
-    final modelItem = ItemModel(
-      id: '', // Firestore generates this automatically
-      ownerId: item.ownerId,
-      title: item.title,
-      description: item.description,
-      categoryId: item.categoryId,
-      imageUrls: item.imageUrls,
-      desiredItem: item.desiredItem,
-      status: 'available',
-    );
-
-    await _firestore.collection('items').add(modelItem.toFirestore());
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/add_item_provider.dart';
 
@@ -13,13 +14,27 @@ class AddItemPage extends ConsumerStatefulWidget {
 }
 
 class _AddItemPageState extends ConsumerState<AddItemPage> {
+  final _formKey = GlobalKey<FormState>();
   final List<File> _images = [];
   final _picker = ImagePicker();
+
+  // Controllers to manage the text fields' state
+  final _titleController = TextEditingController();
+  final _lookingForController = TextEditingController();
+  final _descController = TextEditingController();
+
+  @override
+  void dispose() {
+    // Dispose controllers to free up resources
+    _titleController.dispose();
+    _lookingForController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
     if (_images.length >= 5) return;
 
-    // pickMultiImage allows selecting multiple images at once.
     final pickedFiles = await _picker.pickMultiImage(
       imageQuality: 50,
       maxWidth: 1080,
@@ -27,7 +42,6 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
 
     if (pickedFiles.isNotEmpty) {
       setState(() {
-        // Add all selected images, respecting the limit of 5.
         _images.addAll(
           pickedFiles.map((file) => File(file.path)).take(5 - _images.length),
         );
@@ -35,62 +49,93 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     }
   }
 
-  void _submit() {
-    if (_images.isEmpty) return;
+  void _submit(String ownerId) {
+    // Trigger validation and check if the form is valid.
+    if (_formKey.currentState?.validate() ?? false) {
+      final newItem = ItemEntity(
+        id: '', // Firestore will generate this
+        ownerId: ownerId, // The authenticated user's ID
+        title: _titleController.text.trim(),
+        description: _descController.text.trim(),
+        categoryId: 'general', // Placeholder category
+        imageUrls: [], // URLs will be populated by the provider during upload
+        desiredItem: _lookingForController.text.trim(),
+        status: 'available',
+      );
 
-    // final newItem = ItemEntity(
-    //   id: '',
-    //   ownerId: 'current_user_id', // Integrate with your AuthProvider later
-    //   title: _titleController.text.trim(),
-    //   description: _descController.text.trim(),
-    //   categoryId: 'general',
-    //   imageUrls: [],
-    //   desiredItem: _lookingForController.text.trim(),
-    //   status: 'available',
-    // );
-    //
-    // ref.read(addItemProvider.notifier).uploadItem(newItem, _images);
+      // Call the notifier to handle the item upload logic
+      ref.read(addItemProvider.notifier).uploadItem(newItem, _images);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
     final uploadState = ref.watch(addItemProvider);
+
+    // Listen to state changes for side-effects
+    ref.listen<AddItemState>(addItemProvider, (_, state) {
+      if (state is AddItemSuccess) {
+        Navigator.of(context).pop();
+      }
+      if (state is AddItemError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.message)),
+        );
+      }
+    });
+
+    // Extract ownerId from the authenticated state
+    String? ownerId;
+    if (authState is AuthAuthenticated) {
+      ownerId = authState.user.uid;
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: const Text("NEW ITEM")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            _buildImageGrid(),
-            const SizedBox(height: 8),
-            Text(
-              "${_images.length}/5 images",
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Minimal Inputs
-            _CustomTextField(label: 'TITLE', hint: 'e.g. Vintage Camera'),
-            _CustomTextField(
-              label: 'LOOKING FOR',
-              hint: 'What do you want in exchange?',
-            ),
-            _CustomTextField(
-              label: 'DESCRIPTION',
-              hint: 'Describe condition...',
-              maxLines: 4,
-            ),
-
-            const SizedBox(height: 40),
-
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              _buildImageGrid(),
+              const SizedBox(height: 8),
+              Text(
+                "${_images.length}/5 images",
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 32),
+              _CustomTextFormField(
+                controller: _titleController,
+                label: 'TITLE',
+                hint: 'e.g. Vintage Camera',
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Title is required' : null,
+              ),
+              _CustomTextFormField(
+                controller: _lookingForController,
+                label: 'LOOKING FOR',
+                hint: 'What do you want in exchange?',
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'This field is required' : null,
+              ),
+              _CustomTextFormField(
+                controller: _descController,
+                label: 'DESCRIPTION',
+                hint: 'Describe condition...',
+                maxLines: 4,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Description is required' : null,
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
-      bottomSheet: _buildBottomButton(uploadState),
+      bottomSheet: _buildBottomButton(uploadState, ownerId),
     );
   }
 
@@ -155,46 +200,48 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     );
   }
 
-  Widget _buildBottomButton(AddItemState state) {
-    // Disable if loading or if no images selected
-    final bool canUpload = state is! AddItemLoading && _images.isNotEmpty;
+  Widget _buildBottomButton(AddItemState state, String? ownerId) {
+    // Button is enabled only if not loading, an ownerId is present, and at least one image is selected
+    final bool canUpload =
+        state is! AddItemLoading && ownerId != null && _images.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-      ),
-      child: ElevatedButton(
-        onPressed: canUpload
-            ? () {
-                // Logic to collect controllers data and call notifier
-                // ref.read(addItemProvider.notifier).uploadItem(item, _images);
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 64),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
         ),
-        child: state is AddItemLoading
-            ? const CircularProgressIndicator()
-            : const Text("POST ITEM"),
+        child: ElevatedButton(
+          onPressed: canUpload ? () => _submit(ownerId!) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: state is AddItemLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text("POST ITEM"),
+        ),
       ),
     );
   }
 }
 
-class _CustomTextField extends StatelessWidget {
+class _CustomTextFormField extends StatelessWidget {
   final String label;
   final String hint;
   final int maxLines;
+  final TextEditingController controller;
+  final String? Function(String?)? validator;
 
-  const _CustomTextField({
+  const _CustomTextFormField({
     required this.label,
     required this.hint,
+    required this.controller,
+    this.validator,
     this.maxLines = 1,
   });
 
@@ -209,7 +256,8 @@ class _CustomTextField extends StatelessWidget {
             label,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
           ),
-          TextField(
+          TextFormField(
+            controller: controller,
             maxLines: maxLines,
             decoration: InputDecoration(
               hintText: hint,
@@ -221,6 +269,7 @@ class _CustomTextField extends StatelessWidget {
                 borderSide: BorderSide(color: Colors.black),
               ),
             ),
+            validator: validator,
           ),
         ],
       ),

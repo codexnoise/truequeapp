@@ -9,6 +9,7 @@ import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/repositories/home_repository_impl.dart';
 import '../../features/home/domain/usecases/add_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
+import '../services/storage_service.dart';
 
 // sl stands for Service Locator
 final sl = GetIt.instance;
@@ -34,6 +35,9 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthRemoteDataSource>(
         () => AuthRemoteDataSourceImpl(sl()),
   );
+
+  // Core
+  sl.registerLazySingleton(() => StorageService());
 
   // External (Third-party plugins)
   sl.registerLazySingleton(() => FirebaseAuth.instance);
