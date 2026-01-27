@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/add_item_provider.dart';
+import '../widgets/category_constants.dart';
 
 class AddItemPage extends ConsumerStatefulWidget {
   const AddItemPage({super.key});
@@ -17,6 +18,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   final _formKey = GlobalKey<FormState>();
   final List<File> _images = [];
   final _picker = ImagePicker();
+  String _selectedCategory = 'general';
 
   // Controllers to manage the text fields' state
   final _titleController = TextEditingController();
@@ -57,7 +59,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         ownerId: ownerId, // The authenticated user's ID
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
-        categoryId: 'general', // Placeholder category
+        categoryId: _selectedCategory,
         imageUrls: [], // URLs will be populated by the provider during upload
         desiredItem: _lookingForController.text.trim(),
         status: 'available',
@@ -129,6 +131,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Title is required' : null,
               ),
+              _buildCategorySelector(),
               _CustomTextFormField(
                 controller: _lookingForController,
                 label: 'LOOKING FOR',
@@ -150,6 +153,32 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         ),
       ),
       bottomSheet: _buildBottomButton(ref.watch(addItemProvider), ownerId),
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          const Text(
+            'CATEGORY',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+          ),
+          DropdownButton<String>(
+            value: _selectedCategory,
+            isExpanded: true,
+            onChanged: (value) => setState(() => _selectedCategory = value!),
+            items: categories.entries.map((entry) {
+              return DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
+import '../widgets/category_constants.dart';
 import '../widgets/item_card_widget.dart';
 
 class HomePage extends ConsumerWidget {
@@ -64,11 +65,9 @@ class HomePage extends ConsumerWidget {
                 padding: const EdgeInsets.only(left: 16),
                 children: [
                   _CategoryChip(label: 'All', isSelected: true),
-                  _CategoryChip(label: 'Tech'),
-                  _CategoryChip(label: 'Fashion'),
-                  _CategoryChip(label: 'Home'),
-                  _CategoryChip(label: 'Books'),
-                  _CategoryChip(label: 'Music'),
+                  ...categories.entries.map((entry) {
+                    return _CategoryChip(label: entry.value);
+                  }).toList(),
                 ],
               ),
             ),
