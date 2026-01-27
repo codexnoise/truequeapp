@@ -71,16 +71,30 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final uploadState = ref.watch(addItemProvider);
-
-    // Listen to state changes for side-effects
-    ref.listen<AddItemState>(addItemProvider, (_, state) {
-      if (state is AddItemSuccess) {
-        Navigator.of(context).pop();
+    ref.listen<AddItemState>(addItemProvider, (previous, next) {
+      // Show loading dialog
+      if (next is AddItemLoading) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const PopScope(
+            canPop: false,
+            child: Center(child: CircularProgressIndicator(color: Colors.white)),
+          ),
+        );
       }
-      if (state is AddItemError) {
+
+      // Pop loading dialog and go back on success
+      if (next is AddItemSuccess) {
+        Navigator.of(context).pop(); // Dismiss dialog
+        Navigator.of(context).pop(); // Go back to prev screen
+      }
+
+      // Pop loading dialog and show error
+      if (next is AddItemError) {
+        Navigator.of(context).pop(); // Dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.message)),
+          SnackBar(content: Text(next.message)),
         );
       }
     });
@@ -135,7 +149,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           ),
         ),
       ),
-      bottomSheet: _buildBottomButton(uploadState, ownerId),
+      bottomSheet: _buildBottomButton(ref.watch(addItemProvider), ownerId),
     );
   }
 
@@ -201,7 +215,6 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   }
 
   Widget _buildBottomButton(AddItemState state, String? ownerId) {
-    // Button is enabled only if not loading, an ownerId is present, and at least one image is selected
     final bool canUpload =
         state is! AddItemLoading && ownerId != null && _images.isNotEmpty;
 
