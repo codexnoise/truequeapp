@@ -73,6 +73,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+
     ref.listen<AddItemState>(addItemProvider, (previous, next) {
       // Show loading dialog
       if (next is AddItemLoading) {

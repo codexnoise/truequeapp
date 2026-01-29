@@ -11,8 +11,10 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8), // Gris muy claro de fondo
+      backgroundColor: const Color(0xFFF8F8F8),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -35,7 +37,6 @@ class HomePage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: .start,
           children: [
-            // 1. Buscador
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
@@ -51,8 +52,6 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             ),
-
-            // 2. Categorías
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text('CATEGORIES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
@@ -71,43 +70,48 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
             ),
-
-            // 3. Feed de Productos
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ref.watch(itemsStreamProvider).when(
-                // 1. Cuando hay datos reales
                 data: (items) {
                   if (items.isEmpty) {
                     return const Center(child: Text("No items available for trade"));
                   }
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return ItemCard(item: item);
-                    },
-                  );
+
+                  if (authState is AuthAuthenticated) {
+                    final currentUserId = authState.user.uid;
+                    final filteredItems = items.where((item) => item.ownerId != currentUserId).toList();
+
+                    if (filteredItems.isEmpty) {
+                      return const Center(child: Text("No items from other users are available."));
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        return ItemCard(item: item);
+                      },
+                    );
+                  }
+                  // Fallback por si el estado de auth no es el esperado
+                  return const Center(child: CircularProgressIndicator(color: Colors.black));
                 },
-                // 2. Mientras carga
                 loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
-                // 3. Si ocurre un error
                 error: (err, stack) => Center(child: Text("Error: $err")),
               ),
             ),
           ],
         ),
       ),
-
-      // 4. Botón para agregar artículo
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.pushNamed('add-item'),
         backgroundColor: Colors.black,
@@ -115,7 +119,6 @@ class HomePage extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      // 5. Navegación inferior
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
@@ -131,7 +134,6 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-// Widget pequeño para las categorías
 class _CategoryChip extends StatelessWidget {
   final String label;
   final bool isSelected;
