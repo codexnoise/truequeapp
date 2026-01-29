@@ -7,6 +7,7 @@ import '../../features/home/domain/entities/item_entity.dart';
 import '../../features/home/presentation/pages/add_item_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/item_detail_page.dart';
+import '../../features/home/presentation/pages/my_items_page.dart';
 
 /// Provider that manages the global routing configuration.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -40,6 +41,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: '/my-items',
+        name: 'my-items',
+        builder: (context, state) => const MyItemsPage(),
+      ),
       GoRoute(
         path: '/item-detail',
         name: 'item-detail',

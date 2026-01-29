@@ -6,11 +6,41 @@ import '../providers/home_provider.dart';
 import '../widgets/category_constants.dart';
 import '../widgets/item_card_widget.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  int _currentIndex = 0;
+
+  void _onItemTapped(int index) {
+    if (index == _currentIndex) return;
+
+    setState(() {
+      _currentIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        // Si ya estás en home, no hagas nada. Considera refrescar.
+        break;
+      case 1:
+        // TODO: Implementar navegación a la página de mensajes
+        break;
+      case 2:
+        context.pushNamed('my-items');
+        break;
+      case 3:
+        // TODO: Implementar navegación a la página de perfil
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -102,7 +132,6 @@ class HomePage extends ConsumerWidget {
                       },
                     );
                   }
-                  // Fallback por si el estado de auth no es el esperado
                   return const Center(child: CircularProgressIndicator(color: Colors.black));
                 },
                 loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
@@ -120,13 +149,17 @@ class HomePage extends ConsumerWidget {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed, // Asegura que todos los items se muestren
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Messages'),
+          BottomNavigationBarItem(icon: Icon(Icons.format_list_bulleted), label: 'My Items'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
       ),
