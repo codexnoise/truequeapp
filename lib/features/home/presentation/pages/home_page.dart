@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../domain/entities/item_entity.dart';
 import '../providers/home_provider.dart';
 import '../widgets/category_constants.dart';
 import '../widgets/item_card_widget.dart';
@@ -15,6 +16,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
+  String _searchQuery = '';
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
@@ -39,9 +41,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
+  List<ItemEntity> _filterBySearch(List<ItemEntity> items) {
+    if (_searchQuery.isEmpty) return items;
+    return items.where((item) => item.title.toLowerCase().contains(_searchQuery)).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    final availableItems = ref.watch(availableItemsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
@@ -70,6 +77,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
                 decoration: InputDecoration(
                   hintText: 'Search for items...',
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -102,37 +114,33 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ref.watch(itemsStreamProvider).when(
+              child: availableItems.when(
                 data: (items) {
                   if (items.isEmpty) {
-                    return const Center(child: Text("No items available for trade"));
+                    return const Center(child: Text("No items from other users are available."));
                   }
 
-                  if (authState is AuthAuthenticated) {
-                    final currentUserId = authState.user.uid;
-                    final filteredItems = items.where((item) => item.ownerId != currentUserId).toList();
+                  final filteredItems = _filterBySearch(items);
 
-                    if (filteredItems.isEmpty) {
-                      return const Center(child: Text("No items from other users are available."));
-                    }
-
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.75,
-                      ),
-                      itemCount: filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = filteredItems[index];
-                        return ItemCard(item: item);
-                      },
-                    );
+                  if (filteredItems.isEmpty) {
+                    return const Center(child: Text("No items match your search."));
                   }
-                  return const Center(child: CircularProgressIndicator(color: Colors.black));
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      return ItemCard(item: item);
+                    },
+                  );
                 },
                 loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
                 error: (err, stack) => Center(child: Text("Error: $err")),

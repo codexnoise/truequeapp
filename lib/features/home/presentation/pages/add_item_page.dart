@@ -256,7 +256,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
         ),
         child: ElevatedButton(
-          onPressed: canUpload ? () => _submit(ownerId!) : null,
+          onPressed: canUpload ? () => _submit(ownerId) : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
