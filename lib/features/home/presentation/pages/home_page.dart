@@ -17,6 +17,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
   String _searchQuery = '';
+  String? _selectedCategory;
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
@@ -41,9 +42,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  List<ItemEntity> _filterBySearch(List<ItemEntity> items) {
-    if (_searchQuery.isEmpty) return items;
-    return items.where((item) => item.title.toLowerCase().contains(_searchQuery)).toList();
+  List<ItemEntity> _filterItems(List<ItemEntity> items) {
+    var filtered = items;
+    
+    if (_selectedCategory != null) {
+      filtered = filtered.where((item) => item.categoryId == _selectedCategory).toList();
+    }
+    
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((item) => item.title.toLowerCase().contains(_searchQuery)).toList();
+    }
+    
+    return filtered;
   }
 
   @override
@@ -105,10 +115,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(left: 16),
                 children: [
-                  _CategoryChip(label: 'All', isSelected: true),
+                  _CategoryChip(
+                    label: 'All',
+                    isSelected: _selectedCategory == null,
+                    onTap: () => setState(() => _selectedCategory = null),
+                  ),
                   ...categories.entries.map((entry) {
-                    return _CategoryChip(label: entry.value);
-                  }).toList(),
+                    return _CategoryChip(
+                      label: entry.value,
+                      isSelected: _selectedCategory == entry.key,
+                      onTap: () => setState(() => _selectedCategory = entry.key),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -120,7 +138,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     return const Center(child: Text("No items from other users are available."));
                   }
 
-                  final filteredItems = _filterBySearch(items);
+                  final filteredItems = _filterItems(items);
 
                   if (filteredItems.isEmpty) {
                     return const Center(child: Text("No items match your search."));
@@ -178,21 +196,25 @@ class _HomePageState extends ConsumerState<HomePage> {
 class _CategoryChip extends StatelessWidget {
   final String label;
   final bool isSelected;
-  const _CategoryChip({required this.label, this.isSelected = false});
+  final VoidCallback? onTap;
+  const _CategoryChip({required this.label, this.isSelected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.black : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w500),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }
