@@ -19,6 +19,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   final List<File> _images = [];
   final _picker = ImagePicker();
   String _selectedCategory = 'general';
+  bool _isFree = false;
 
   // Controllers to manage the text fields' state
   final _titleController = TextEditingController();
@@ -61,7 +62,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         description: _descController.text.trim(),
         categoryId: _selectedCategory,
         imageUrls: [], // URLs will be populated by the provider during upload
-        desiredItem: _lookingForController.text.trim(),
+        desiredItem: _isFree ? 'Donation' : _lookingForController.text.trim(),
         status: 'available',
       );
 
@@ -133,12 +134,30 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
                     value == null || value.isEmpty ? 'Title is required' : null,
               ),
               _buildCategorySelector(),
+              CheckboxListTile(
+                title: const Text("Mark as donation (free)"),
+                value: _isFree,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _isFree = value ?? false;
+                    if (_isFree) {
+                      _lookingForController.clear();
+                    }
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                activeColor: Colors.black,
+              ),
               _CustomTextFormField(
                 controller: _lookingForController,
                 label: 'LOOKING FOR',
-                hint: 'What do you want in exchange?',
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'This field is required' : null,
+                hint: _isFree ? 'This is a donation' : 'What do you want in exchange?',
+                enabled: !_isFree,
+                validator: (value) {
+                  if (_isFree) return null;
+                  return value == null || value.isEmpty ? 'This field is required' : null;
+                },
               ),
               _CustomTextFormField(
                 controller: _descController,
@@ -159,7 +178,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
 
   Widget _buildCategorySelector() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(
         crossAxisAlignment: .start,
         children: [
@@ -279,6 +298,7 @@ class _CustomTextFormField extends StatelessWidget {
   final int maxLines;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final bool enabled;
 
   const _CustomTextFormField({
     required this.label,
@@ -286,6 +306,7 @@ class _CustomTextFormField extends StatelessWidget {
     required this.controller,
     this.validator,
     this.maxLines = 1,
+    this.enabled = true,
   });
 
   @override
@@ -302,6 +323,7 @@ class _CustomTextFormField extends StatelessWidget {
           TextFormField(
             controller: controller,
             maxLines: maxLines,
+            enabled: enabled,
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
@@ -310,6 +332,9 @@ class _CustomTextFormField extends StatelessWidget {
               ),
               focusedBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.black),
+              ),
+              disabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFEEEEEE)),
               ),
             ),
             validator: validator,
