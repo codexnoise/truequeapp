@@ -18,6 +18,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
   String _searchQuery = '';
   String? _selectedCategory;
+  bool _showOnlyFreeItems = false;
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
@@ -44,15 +45,19 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   List<ItemEntity> _filterItems(List<ItemEntity> items) {
     var filtered = items;
-    
+
+    if (_showOnlyFreeItems) {
+      filtered = filtered.where((item) => item.desiredItem == 'Donation').toList();
+    }
+
     if (_selectedCategory != null) {
       filtered = filtered.where((item) => item.categoryId == _selectedCategory).toList();
     }
-    
+
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((item) => item.title.toLowerCase().contains(_searchQuery)).toList();
     }
-    
+
     return filtered;
   }
 
@@ -80,91 +85,109 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value.toLowerCase();
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search for items...',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search for items...',
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text('CATEGORIES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(left: 16),
-                children: [
-                  _CategoryChip(
-                    label: 'All',
-                    isSelected: _selectedCategory == null,
-                    onTap: () => setState(() => _selectedCategory = null),
-                  ),
-                  ...categories.entries.map((entry) {
-                    return _CategoryChip(
-                      label: entry.value,
-                      isSelected: _selectedCategory == entry.key,
-                      onTap: () => setState(() => _selectedCategory = entry.key),
-                    );
-                  }),
-                ],
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text('CATEGORIES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: availableItems.when(
-                data: (items) {
-                  if (items.isEmpty) {
-                    return const Center(child: Text("No items from other users are available."));
-                  }
-
-                  final filteredItems = _filterItems(items);
-
-                  if (filteredItems.isEmpty) {
-                    return const Center(child: Text("No items match your search."));
-                  }
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.75,
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.only(left: 16),
+                  children: [
+                    _CategoryChip(
+                      label: 'All',
+                      isSelected: _selectedCategory == null,
+                      onTap: () => setState(() => _selectedCategory = null),
                     ),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return ItemCard(item: item);
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
-                error: (err, stack) => Center(child: Text("Error: $err")),
+                    ...categories.entries.map((entry) {
+                      return _CategoryChip(
+                        label: entry.value,
+                        isSelected: _selectedCategory == entry.key,
+                        onTap: () => setState(() => _selectedCategory = entry.key),
+                      );
+                    }),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: CheckboxListTile(
+                  title: const Text("Show only donations"),
+                  value: _showOnlyFreeItems,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _showOnlyFreeItems = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: Colors.black,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: availableItems.when(
+                  data: (items) {
+                    if (items.isEmpty) {
+                      return const Center(child: Text("No items from other users are available."));
+                    }
+
+                    final filteredItems = _filterItems(items);
+
+                    if (filteredItems.isEmpty) {
+                      return const Center(child: Text("No items match your search."));
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        return ItemCard(item: item);
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                  error: (err, stack) => Center(child: Text("Error: $err")),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
