@@ -138,7 +138,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: CheckboxListTile(
                   title: const Text("Show only donations"),
                   value: _showOnlyFreeItems,

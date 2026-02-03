@@ -10,6 +10,7 @@ class ItemDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Optimized screen size access
     final screenSize = MediaQuery.sizeOf(context);
+    final isDonation = item.desiredItem == 'Donation';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -20,12 +21,11 @@ class ItemDetailPage extends StatelessWidget {
             elevation: 0,
             pinned: true,
             stretch: true,
-            // New syntax for colors with transparency
-            backgroundColor: Colors.white.withValues(alpha: 0.1),
+            backgroundColor: Colors.white.withOpacity(0.1),
             leading: Padding(
               padding: const EdgeInsets.all(8.0),
               child: CircleAvatar(
-                backgroundColor: Colors.white.withValues(alpha: 0.8),
+                backgroundColor: Colors.white.withOpacity(0.8),
                 child: const BackButton(color: Colors.black),
               ),
             ),
@@ -52,8 +52,7 @@ class ItemDetailPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
-                // Modern shorthand for alignment
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.categoryId.toUpperCase(),
@@ -77,9 +76,13 @@ class ItemDetailPage extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Exchange section
-                  const Text(
-                    "LOOKING FOR",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                  Text(
+                    isDonation ? "DONATION" : "LOOKING FOR",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: isDonation ? Colors.green.shade700 : Colors.black,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -90,11 +93,11 @@ class ItemDetailPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      item.desiredItem,
-                      style: const TextStyle(
-                        fontSize: 18,
+                      isDonation ? "This is a free item offered as a donation." : item.desiredItem,
+                      style: TextStyle(
+                        fontSize: isDonation ? 16 : 18,
                         fontWeight: FontWeight.w500,
-                        fontStyle: FontStyle.italic,
+                        fontStyle: isDonation ? FontStyle.normal : FontStyle.italic,
                       ),
                     ),
                   ),
@@ -138,9 +141,9 @@ class ItemDetailPage extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: const Text(
-            "SEND OFFER",
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+          child: Text(
+            isDonation ? "REQUEST ITEM" : "SEND OFFER",
+            style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
           ),
         ),
       ),
