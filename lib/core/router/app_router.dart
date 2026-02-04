@@ -5,6 +5,7 @@ import '../../../features/auth/presentation/pages/register_page.dart';
 import '../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/home/domain/entities/item_entity.dart';
 import '../../features/home/presentation/pages/add_item_page.dart';
+import '../../features/home/presentation/pages/edit_item_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
@@ -58,6 +59,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/add-item',
         name: 'add-item',
         builder: (context, state) => const AddItemPage(),
+      ),
+      GoRoute(
+        path: '/edit-item',
+        name: 'edit-item',
+        builder: (context, state) {
+          final item = state.extra as ItemEntity;
+          return EditItemPage(item: item);
+        },
       ),
     ],
   );

@@ -5,13 +5,14 @@ import '../../domain/entities/item_entity.dart';
 
 class ItemCard extends StatelessWidget {
   final ItemEntity item;
+  final VoidCallback? onTap;
 
-  const ItemCard({super.key, required this.item});
+  const ItemCard({super.key, required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.pushNamed('item-detail', extra: item),
+      onTap: onTap ?? () => context.pushNamed('item-detail', extra: item),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

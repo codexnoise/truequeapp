@@ -42,7 +42,10 @@ class MyItemsPage extends ConsumerWidget {
               itemCount: myItems.length,
               itemBuilder: (context, index) {
                 final item = myItems[index];
-                return ItemCard(item: item);
+                return ItemCard(
+                  item: item,
+                  onTap: () => context.pushNamed('edit-item', extra: item),
+                );
               },
             );
           }
