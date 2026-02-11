@@ -19,4 +19,15 @@ class StorageService {
     // Get download URL after completion
     return await uploadTask.ref.getDownloadURL();
   }
+
+  // Deletes a file from Storage given its URL
+  Future<void> deleteImage(String url) async {
+    try {
+      final ref = _storage.refFromURL(url);
+      await ref.delete();
+    } catch (e) {
+      // Log error but don't fail the update process if a delete fails
+      print('Error deleting image from storage: $e');
+    }
+  }
 }

@@ -29,7 +29,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       // Send verification email manually
-      await credential.user?.sendEmailVerification();
+      // await credential.user?.sendEmailVerification();
 
       return credential.user != null ? UserModel.fromFirebase(credential.user!) : null;
     } catch (e) {

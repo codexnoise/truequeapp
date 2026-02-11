@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:truequeapp/features/home/domain/usecases/update_item_usecase.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -51,4 +52,5 @@ void setupHomeDependencies() {
   // UseCases
   sl.registerLazySingleton(() => GetItemsUseCase(sl()));
   sl.registerLazySingleton(() => AddItemUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
 }
