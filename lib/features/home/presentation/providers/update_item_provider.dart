@@ -25,10 +25,20 @@ class UpdateItemNotifier extends Notifier<UpdateItemState> {
     return UpdateItemInitial();
   }
 
-  Future<void> updateItem(ItemEntity item, List<String> existingUrls, List<File> newImageFiles) async {
+  Future<void> updateItem({
+    required ItemEntity item,
+    required List<String> existingUrls,
+    required List<File> newImageFiles,
+    required List<String> removedUrls,
+  }) async {
     state = UpdateItemLoading();
     try {
-      await sl<UpdateItemUseCase>().execute(item, existingUrls, newImageFiles);
+      await sl<UpdateItemUseCase>().execute(
+        item: item,
+        existingUrls: existingUrls,
+        newImageFiles: newImageFiles,
+        removedUrls: removedUrls,
+      );
       state = UpdateItemSuccess();
     } catch (e) {
       state = UpdateItemError(e.toString());

@@ -7,7 +7,17 @@ class UpdateItemUseCase {
 
   UpdateItemUseCase(this.repository);
 
-  Future<void> execute(ItemEntity item, List<String> existingUrls, List<File> newImageFiles) async {
-    return await repository.updateItem(item, existingUrls, newImageFiles);
+  Future<void> execute({
+    required ItemEntity item,
+    required List<String> existingUrls,
+    required List<File> newImageFiles,
+    required List<String> removedUrls,
+  }) async {
+    return await repository.updateItem(
+      item: item,
+      existingUrls: existingUrls,
+      newImageFiles: newImageFiles,
+      removedUrls: removedUrls,
+    );
   }
 }

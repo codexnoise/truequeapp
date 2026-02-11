@@ -4,6 +4,13 @@ import '../entities/item_entity.dart';
 
 abstract class HomeRepository {
   Stream<List<ItemEntity>> getItems();
-  // New method for adding items
+
   Future<void> addItem(ItemEntity item, List<File> imageFiles);
+
+  Future<void> updateItem({
+    required ItemEntity item,
+    required List<String> existingUrls,
+    required List<File> newImageFiles,
+    required List<String> removedUrls,
+  });
 }
