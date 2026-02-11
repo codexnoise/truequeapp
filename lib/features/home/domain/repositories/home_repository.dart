@@ -13,4 +13,6 @@ abstract class HomeRepository {
     required List<File> newImageFiles,
     required List<String> removedUrls,
   });
+
+  Future<void> deleteItem(ItemEntity item);
 }

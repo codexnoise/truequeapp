@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/item_entity.dart';
+import '../providers/delete_item_provider.dart';
 import '../providers/update_item_provider.dart';
 
 class EditItemPage extends ConsumerStatefulWidget {
@@ -95,6 +96,38 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final updateState = ref.watch(updateItemProvider);
+    final deleteState = ref.watch(deleteItemProvider);
+
+    ref.listen<DeleteItemState>(deleteItemProvider, (previous, next) {
+      if (next is DeleteItemLoading) {
+        // Muestra un loader general mientras se borra
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const PopScope(
+            canPop: false,
+            child: Center(child: CircularProgressIndicator(color: Colors.white)),
+          ),
+        );
+      }
+      if (next is DeleteItemSuccess) {
+        // Cierra el loader, el diálogo de alerta y la página de edición
+        Navigator.of(context).pop(); // Cierra loader
+        Navigator.of(context).pop(); // Cierra AlertDialog
+        Navigator.of(context).pop(); // Cierra EditItemPage
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Artículo eliminado con éxito')),
+        );
+      }
+      if (next is DeleteItemError) {
+        Navigator.of(context).pop(); // Cierra loader
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.message)),
+        );
+      }
+    });
+
     ref.listen<UpdateItemState>(updateItemProvider, (previous, next) {
       if (next is UpdateItemLoading) {
         showDialog(
@@ -129,11 +162,13 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
         title: const Text('Editar Artículo'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
+            icon: const Icon(Icons.delete, color: Colors.black),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
                   title: const Text('Eliminar Artículo'),
                   content: const Text('¿Estás seguro de que quieres eliminar este artículo?'),
                   actions: [
@@ -143,9 +178,9 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // TODO: actually delete
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        if (deleteState is! DeleteItemLoading) {
+                          ref.read(deleteItemProvider.notifier).deleteItem(widget.item);
+                        }
                       },
                       child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
                     ),
@@ -219,22 +254,39 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                   return value == null || value.isEmpty ? 'Este campo es requerido' : null;
                 },
               ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 60),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('GUARDAR CAMBIOS'),
-                ),
-              ),
+              const SizedBox(height: 100), // Space for bottom sheet
             ],
           ),
+        ),
+      ),
+      bottomSheet: _buildBottomButton(updateState),
+    );
+  }
+
+  Widget _buildBottomButton(UpdateItemState state) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+        ),
+        child: ElevatedButton(
+          onPressed: state is UpdateItemLoading ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: state is UpdateItemLoading
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                )
+              : const Text("GUARDAR CAMBIOS"),
         ),
       ),
     );

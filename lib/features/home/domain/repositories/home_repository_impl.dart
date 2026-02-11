@@ -60,4 +60,15 @@ class HomeRepositoryImpl implements HomeRepository {
     final model = ItemModel.fromEntity(item).copyWith(imageUrls: finalUrls);
     await _firestore.collection('items').doc(item.id).update(model.toFirestore());
   }
+
+  @override
+  Future<void> deleteItem(ItemEntity item) async {
+    // 1. Delete all images from Storage
+    for (var url in item.imageUrls) {
+      await sl<StorageService>().deleteImage(url);
+    }
+
+    // 2. Delete document from Firestore
+    await _firestore.collection('items').doc(item.id).delete();
+  }
 }
