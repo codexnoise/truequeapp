@@ -9,6 +9,7 @@ import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/repositories/home_repository_impl.dart';
 import '../../features/home/domain/usecases/add_item_usecase.dart';
+import '../../features/home/domain/usecases/delete_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
 import '../services/storage_service.dart';
 
@@ -53,4 +54,5 @@ void setupHomeDependencies() {
   sl.registerLazySingleton(() => GetItemsUseCase(sl()));
   sl.registerLazySingleton(() => AddItemUseCase(sl()));
   sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
 }
