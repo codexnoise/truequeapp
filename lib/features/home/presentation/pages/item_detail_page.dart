@@ -1,16 +1,176 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
+import '../providers/exchange_provider.dart';
+import '../providers/home_provider.dart';
 
-class ItemDetailPage extends StatelessWidget {
+class ItemDetailPage extends ConsumerStatefulWidget {
   final ItemEntity item;
 
   const ItemDetailPage({super.key, required this.item});
 
   @override
+  ConsumerState<ItemDetailPage> createState() => _ItemDetailPageState();
+}
+
+class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
+  final _messageController = TextEditingController();
+  ItemEntity? _selectedOfferItem;
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _showOfferDialog(String senderId) {
+    final myItemsAsync = ref.watch(myItemsProvider);
+    final isDonation = widget.item.desiredItem == 'Donation';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 24,
+            left: 24,
+            right: 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isDonation ? "REQUERIR DONACIÓN" : "HACER UNA OFERTA",
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                if (!isDonation) ...[
+                  const Text(
+                    "¿Qué quieres ofrecer a cambio?",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  myItemsAsync.when(
+                    data: (items) {
+                      if (items.isEmpty) {
+                        return const Text("No tienes artículos para ofrecer. Puedes enviar un mensaje.");
+                      }
+                      return SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            final isSelected = _selectedOfferItem?.id == item.id;
+                            return GestureDetector(
+                              onTap: () => setModalState(() => _selectedOfferItem = item),
+                              child: Container(
+                                width: 100,
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: isSelected ? Colors.black : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  image: DecorationImage(
+                                    image: NetworkImage(item.imageUrls.first),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, s) => Text('Error: $e'),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                const Text(
+                  "MENSAJE (OPCIONAL)",
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _messageController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: isDonation 
+                        ? "¿Por qué necesitas este artículo?" 
+                        : "Explica tu oferta...",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(exchangeProvider.notifier).sendRequest(
+                          senderId: senderId,
+                          receiverId: widget.item.ownerId,
+                          receiverItemId: widget.item.id,
+                          senderItemId: _selectedOfferItem?.id,
+                          message: _messageController.text.trim(),
+                        );
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 60),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(isDonation ? "SOLICITAR" : "ENVIAR OFERTA"),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Optimized screen size access
     final screenSize = MediaQuery.sizeOf(context);
-    final isDonation = item.desiredItem == 'Donation';
+    final isDonation = widget.item.desiredItem == 'Donation';
+    final authState = ref.watch(authProvider);
+
+    ref.listen<ExchangeState>(exchangeProvider, (prev, next) {
+      if (next is ExchangeLoading) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.white)),
+        );
+      }
+      if (next is ExchangeSuccess) {
+        Navigator.pop(context); // Pop loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Solicitud enviada con éxito!')),
+        );
+        Navigator.pop(context); // Back to list
+      }
+      if (next is ExchangeError) {
+        Navigator.pop(context); // Pop loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.message)),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -18,34 +178,9 @@ class ItemDetailPage extends StatelessWidget {
         slivers: [
           SliverAppBar(
             expandedHeight: screenSize.height * 0.45,
-            elevation: 0,
             pinned: true,
-            stretch: true,
-            backgroundColor: Colors.white.withOpacity(0.1),
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CircleAvatar(
-                backgroundColor: Colors.white.withOpacity(0.8),
-                child: const BackButton(color: Colors.black),
-              ),
-            ),
             flexibleSpace: FlexibleSpaceBar(
-              background: item.imageUrls.isNotEmpty
-                  ? PageView.builder(
-                      itemCount: item.imageUrls.length,
-                      itemBuilder: (context, index) => Image.network(
-                        item.imageUrls[index],
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      color: const Color(0xFFF0F0F0),
-                      child: const Icon(
-                        Icons.image,
-                        size: 48,
-                        color: Colors.grey,
-                      ),
-                    ),
+              background: Image.network(widget.item.imageUrls.first, fit: BoxFit.cover),
             ),
           ),
           SliverToBoxAdapter(
@@ -54,70 +189,11 @@ class ItemDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.categoryId.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    item.title,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Exchange section
-                  Text(
-                    isDonation ? "DONATION" : "LOOKING FOR",
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: isDonation ? Colors.green.shade700 : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      isDonation ? "This is a free item offered as a donation." : item.desiredItem,
-                      style: TextStyle(
-                        fontSize: isDonation ? 16 : 18,
-                        fontWeight: FontWeight.w500,
-                        fontStyle: isDonation ? FontStyle.normal : FontStyle.italic,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-                  const Text(
-                    "DESCRIPTION",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    item.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.6,
-                      color: Color(0xFF333333),
-                    ),
-                  ),
-                  // Bottom padding for floating action area
-                  const SizedBox(height: 140),
+                  Text(widget.item.title, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Text(isDonation ? "DONACIÓN" : "BUSCA: ${widget.item.desiredItem}"),
+                  const SizedBox(height: 24),
+                  Text(widget.item.description),
                 ],
               ),
             ),
@@ -125,26 +201,17 @@ class ItemDetailPage extends StatelessWidget {
         ],
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-        ),
+        padding: const EdgeInsets.all(24),
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: authState is AuthAuthenticated 
+              ? () => _showOfferDialog(authState.user.uid) 
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          child: Text(
-            isDonation ? "REQUEST ITEM" : "SEND OFFER",
-            style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
-          ),
+          child: Text(isDonation ? "SOLICITAR ARTÍCULO" : "HACER OFERTA", style: const TextStyle(color: Colors.white)),
         ),
       ),
     );

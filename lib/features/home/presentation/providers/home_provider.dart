@@ -6,7 +6,6 @@ import '../../domain/usecases/get_items_usecase.dart';
 
 /// Provider that listens to the stream of available barter items
 final itemsStreamProvider = StreamProvider<List<ItemEntity>>((ref) {
-  // We use the sl (Service Locator) to get the UseCase
   return sl<GetItemsUseCase>().execute();
 });
 
@@ -21,5 +20,19 @@ final availableItemsProvider = Provider<AsyncValue<List<ItemEntity>>>((ref) {
       return items.where((item) => item.ownerId != currentUserId).toList();
     }
     return items;
+  });
+});
+
+/// Provider that returns only current user's items
+final myItemsProvider = Provider<AsyncValue<List<ItemEntity>>>((ref) {
+  final authState = ref.watch(authProvider);
+  final itemsAsync = ref.watch(itemsStreamProvider);
+
+  return itemsAsync.whenData((items) {
+    if (authState is AuthAuthenticated) {
+      final currentUserId = authState.user.uid;
+      return items.where((item) => item.ownerId == currentUserId).toList();
+    }
+    return [];
   });
 });

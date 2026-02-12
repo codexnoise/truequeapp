@@ -71,4 +71,38 @@ class HomeRepositoryImpl implements HomeRepository {
     // 2. Delete document from Firestore
     await _firestore.collection('items').doc(item.id).delete();
   }
+
+  @override
+  Future<bool> createExchangeRequest({
+    required String senderId,
+    required String receiverId,
+    required String receiverItemId,
+    String? senderItemId,
+    String? message,
+  }) async {
+    try {
+      final type = senderItemId == null ? 'donation_request' : 'proposal';
+      
+      final data = {
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'receiverItemId': receiverItemId,
+        'senderItemId': senderItemId,
+        'message': message,
+        'status': 'pending',
+        'type': type,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore.collection('exchanges').add(data);
+      return true;
+    } on FirebaseException catch (e) {
+      print('Firebase Error: ${e.message}');
+      rethrow;
+    } catch (e) {
+      print('Error creating exchange request: $e');
+      return false;
+    }
+  }
 }

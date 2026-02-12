@@ -15,4 +15,12 @@ abstract class HomeRepository {
   });
 
   Future<void> deleteItem(ItemEntity item);
+
+  Future<bool> createExchangeRequest({
+    required String senderId,
+    required String receiverId,
+    required String receiverItemId,
+    String? senderItemId,
+    String? message,
+  });
 }
