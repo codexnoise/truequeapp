@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ExchangeModel {
-  final String exchangeId;
+  final String id;
   final String senderId;
   final String receiverId;
   final String receiverItemId;
@@ -13,7 +13,7 @@ class ExchangeModel {
   final DateTime? updatedAt;
 
   const ExchangeModel({
-    required this.exchangeId,
+    required this.id,
     required this.senderId,
     required this.receiverId,
     required this.receiverItemId,
@@ -41,7 +41,7 @@ class ExchangeModel {
 
   factory ExchangeModel.fromMap(Map<String, dynamic> map, String id) {
     return ExchangeModel(
-      exchangeId: id,
+      id: id,
       senderId: map['senderId'] ?? '',
       receiverId: map['receiverId'] ?? '',
       receiverItemId: map['receiverItemId'] ?? '',
