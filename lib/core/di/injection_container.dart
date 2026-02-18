@@ -13,6 +13,7 @@ import '../../features/home/domain/usecases/create_exchange_usecase.dart';
 import '../../features/home/domain/usecases/delete_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
 import '../services/storage_service.dart';
+import '../services/push_notification_service.dart';
 
 // sl stands for Service Locator
 final sl = GetIt.instance;
@@ -41,6 +42,7 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton(() => StorageService());
+  sl.registerLazySingleton(() => PushNotificationService());
 
   // External (Third-party plugins)
   sl.registerLazySingleton(() => FirebaseAuth.instance);

@@ -93,6 +93,7 @@ class HomeRepositoryImpl implements HomeRepository {
         'type': type,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
+        'notificationSent': false, // Track if notification was sent
       };
 
       await _firestore.collection('exchanges').add(data);

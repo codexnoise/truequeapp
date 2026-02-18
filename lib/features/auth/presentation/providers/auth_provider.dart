@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/push_notification_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -56,6 +57,9 @@ class AuthNotifier extends Notifier<AuthState> {
     // Listen to your reactive stream from the repository
     _userSubscription = sl<AuthRepository>().currentUser.listen((user) async {
       if (user != null && keepSession) {
+        // Save FCM token for push notifications
+        await sl<PushNotificationService>().saveUserToken(user.uid);
+        
         // User exists and wants to be remembered
         state = AuthAuthenticated(user);
       } else if (user != null && !keepSession) {
@@ -76,6 +80,9 @@ class AuthNotifier extends Notifier<AuthState> {
     // 2. Listen to the Stream you just created in the Repository
     _userSubscription = sl<AuthRepository>().currentUser.listen((user) async {
       if (user != null && keepSession) {
+        // Save FCM token for push notifications
+        await sl<PushNotificationService>().saveUserToken(user.uid);
+        
         // Only authenticate if there's a user AND the checkbox was checked
         state = AuthAuthenticated(user);
       } else if (user != null && !keepSession) {
@@ -100,6 +107,9 @@ class AuthNotifier extends Notifier<AuthState> {
           await prefs.setBool('keep_session', true);
         }
 
+        // Save FCM token for push notifications
+        await sl<PushNotificationService>().saveUserToken(user.uid);
+
         state = AuthAuthenticated(user);
       } else {
         state = const AuthError("Invalid credentials");
@@ -114,6 +124,9 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await sl<RegisterUseCase>().execute(email, password);
       if (user != null) {
+        // Save FCM token for push notifications
+        await sl<PushNotificationService>().saveUserToken(user.uid);
+        
         state = AuthAuthenticated(user);
       } else {
         state = const AuthError("Registration failed");
@@ -124,6 +137,12 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void logout() async {
+    // Remove FCM token on logout
+    final currentState = state;
+    if (currentState is AuthAuthenticated) {
+      await sl<PushNotificationService>().removeUserToken(currentState.user.uid);
+    }
+    
     // Logic for sign out
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('keep_session');
