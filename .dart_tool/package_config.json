@@ -188,6 +188,24 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "firebase_messaging",
+      "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/firebase_messaging-16.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_messaging_platform_interface",
+      "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/firebase_messaging_platform_interface-4.7.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_messaging_web",
+      "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/firebase_messaging_web-4.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "firebase_storage",
       "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/firebase_storage-13.0.6",
       "packageUri": "lib/",
