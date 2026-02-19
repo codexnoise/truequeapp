@@ -54,3 +54,46 @@ app.*.map.json
 # Android Native (C++)
 **/android/.cxx/
 **/android/.externalNativeBuild/
+
+# Node.js related
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Node.js build outputs
+dist/
+build/
+.nuxt/
+.next/
+.out/
+
+# Node.js environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node.js package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Firebase functions specific
+functions/node_modules/
+functions/.env
+functions/package-lock.json
+functions/yarn.lock
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
