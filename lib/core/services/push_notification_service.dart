@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class PushNotificationService {
   static final PushNotificationService _instance = PushNotificationService._internal();
@@ -10,30 +11,60 @@ class PushNotificationService {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
+  String? _currentUserId;
+
   Future<void> initialize() async {
+    // Initialize local notifications
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+    
+    await _localNotifications.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _onNotificationTapped,
+    );
+
     // Request permission for iOS
     await _requestPermission();
-    
+
+    // Show notifications when app is in foreground (iOS)
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     // Get FCM token
     _fcmToken = await _firebaseMessaging.getToken();
     debugPrint('FCM Token: $_fcmToken');
     
     // Listen for token refresh
-    _firebaseMessaging.onTokenRefresh.listen((token) {
+    _firebaseMessaging.onTokenRefresh.listen((token) async {
       _fcmToken = token;
       debugPrint('FCM Token refreshed: $token');
-      // TODO: Update token in Firestore when user is authenticated
+      if (_currentUserId != null) {
+        await saveUserToken(_currentUserId!);
+      }
     });
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    
-    // Handle background messages
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     
     // Handle message when app is opened from notification
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
@@ -65,7 +96,39 @@ class PushNotificationService {
     debugPrint('Body: ${message.notification?.body}');
     debugPrint('Data: ${message.data}');
     
-    // TODO: Show in-app notification or update UI
+    // Show local notification when app is in foreground
+    _showLocalNotification(message);
+  }
+
+  Future<void> _showLocalNotification(RemoteMessage message) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'exchange_requests',
+      'Exchange Requests',
+      channelDescription: 'Notifications for exchange requests and updates',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    await _localNotifications.show(
+      id: message.hashCode,
+      title: message.notification?.title ?? 'TruequeApp',
+      body: message.notification?.body ?? 'Tienes una nueva notificación',
+      payload: message.data.toString(),
+      notificationDetails: platformChannelSpecifics,
+    );
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
@@ -73,14 +136,20 @@ class PushNotificationService {
     // TODO: Navigate to specific screen based on message data
   }
 
+  void _onNotificationTapped(NotificationResponse notificationResponse) {
+    debugPrint('Notification tapped: ${notificationResponse.payload}');
+    // TODO: Handle notification tap and navigate
+  }
+
   Future<void> saveUserToken(String userId) async {
     if (_fcmToken == null) return;
     
+    _currentUserId = userId;
     try {
-      await _firestore.collection('users').doc(userId).update({
+      await _firestore.collection('users').doc(userId).set({
         'fcmToken': _fcmToken,
         'tokenUpdatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
       debugPrint('FCM token saved for user: $userId');
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
@@ -88,10 +157,11 @@ class PushNotificationService {
   }
 
   Future<void> removeUserToken(String userId) async {
+    _currentUserId = null;
     try {
-      await _firestore.collection('users').doc(userId).update({
+      await _firestore.collection('users').doc(userId).set({
         'fcmToken': FieldValue.delete(),
-      });
+      }, SetOptions(merge: true));
       debugPrint('FCM token removed for user: $userId');
     } catch (e) {
       debugPrint('Error removing FCM token: $e');
@@ -99,9 +169,3 @@ class PushNotificationService {
   }
 }
 
-// Background message handler (must be top-level function)
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('Handling a background message: ${message.messageId}');
-  // TODO: Handle background message
-}

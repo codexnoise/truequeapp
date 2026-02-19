@@ -1,13 +1,14 @@
-const functions = require('firebase-functions');
+const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-exports.sendExchangeNotification = functions.firestore
-  .document('exchanges/{exchangeId}')
-  .onCreate(async (snap, context) => {
+exports.sendExchangeNotification = onDocumentCreated(
+  'exchanges/{exchangeId}',
+  async (event) => {
+    const snap = event.data;
     const exchange = snap.data();
-    
+
     // Don't send notification if already sent
     if (exchange.notificationSent) {
       return null;
@@ -29,9 +30,11 @@ exports.sendExchangeNotification = functions.firestore
       const fcmToken = receiverData.fcmToken;
 
       if (!fcmToken) {
-        console.log('No FCM token for receiver');
+        console.log('No FCM token for receiver:', exchange.receiverId);
         return null;
       }
+
+      console.log('Attempting to send notification to token:', fcmToken);
 
       // Get item details
       const itemDoc = await admin.firestore()
@@ -45,7 +48,7 @@ exports.sendExchangeNotification = functions.firestore
       }
 
       const item = itemDoc.data();
-      
+
       // Get sender details
       const senderDoc = await admin.firestore()
         .collection('users')
@@ -62,21 +65,19 @@ exports.sendExchangeNotification = functions.firestore
       // Prepare notification
       const isDonation = exchange.type === 'donation_request';
       const title = isDonation ? '¡Nueva solicitud de donación!' : '¡Nueva propuesta de intercambio!';
-      const body = isDonation 
+      const body = isDonation
         ? `${sender.displayName || 'Alguien'} ha solicitado tu artículo "${item.title}"`
         : `${sender.displayName || 'Alguien'} quiere intercambiar por "${item.title}"`;
 
-      const notification = {
+      const message = {
         token: fcmToken,
         notification: {
           title: title,
           body: body,
-          sound: 'default',
-          badge: '1',
         },
         data: {
           type: 'exchange_request',
-          exchangeId: context.params.exchangeId,
+          exchangeId: event.params.exchangeId,
           senderId: exchange.senderId,
           receiverItemId: exchange.receiverItemId,
           click_action: 'FLUTTER_NOTIFICATION_CLICK',
@@ -101,7 +102,7 @@ exports.sendExchangeNotification = functions.firestore
       };
 
       // Send notification
-      const response = await admin.messaging().send(notification);
+      const response = await admin.messaging().send(message);
       console.log('Notification sent successfully:', response);
 
       // Mark notification as sent
@@ -112,32 +113,38 @@ exports.sendExchangeNotification = functions.firestore
       console.error('Error sending notification:', error);
       return null;
     }
-  });
+  }
+);
 
 // Handle notification updates (optional)
-exports.updateNotificationStatus = functions.firestore
-  .document('exchanges/{exchangeId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
+exports.updateNotificationStatus = onDocumentUpdated(
+  'exchanges/{exchangeId}',
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
 
     // Send notification when status changes
     if (before.status !== after.status) {
       try {
-        const receiverDoc = await admin.firestore()
+        const senderDoc = await admin.firestore()
           .collection('users')
           .doc(after.senderId) // Notify sender about status change
           .get();
 
-        if (!receiverDoc.exists) return null;
+        if (!senderDoc.exists) return null;
 
-        const receiverData = receiverDoc.data();
-        const fcmToken = receiverData.fcmToken;
+        const senderData = senderDoc.data();
+        const fcmToken = senderData.fcmToken;
 
-        if (!fcmToken) return null;
+        if (!fcmToken) {
+        console.log('No FCM token for sender:', after.senderId);
+        return null;
+      }
+
+      console.log('Attempting to send status update to token:', fcmToken);
 
         let title, body;
-        
+
         switch (after.status) {
           case 'accepted':
             title = '¡Propuesta aceptada!';
@@ -155,22 +162,36 @@ exports.updateNotificationStatus = functions.firestore
             return null;
         }
 
-        const notification = {
+        const message = {
           token: fcmToken,
           notification: {
             title: title,
             body: body,
-            sound: 'default',
           },
           data: {
             type: 'exchange_status_update',
-            exchangeId: context.params.exchangeId,
+            exchangeId: event.params.exchangeId,
             status: after.status,
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
           },
+          android: {
+            priority: 'high',
+            notification: {
+              sound: 'default',
+              channelId: 'exchange_requests',
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+                badge: 1,
+              },
+            },
+          },
         };
 
-        await admin.messaging().send(notification);
+        await admin.messaging().send(message);
         console.log('Status update notification sent');
       } catch (error) {
         console.error('Error sending status update:', error);
@@ -178,4 +199,5 @@ exports.updateNotificationStatus = functions.firestore
     }
 
     return null;
-  });
+  }
+);

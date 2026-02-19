@@ -44,32 +44,7 @@ class AuthNotifier extends Notifier<AuthState> {
     // Initialize the listener
     _listenToAuthState();
 
-    // Start listening to the Firebase Stream
-    _initAuthCheck();
-
     return AuthInitial();
-  }
-
-  void _initAuthCheck() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool keepSession = prefs.getBool('keep_session') ?? false;
-
-    // Listen to your reactive stream from the repository
-    _userSubscription = sl<AuthRepository>().currentUser.listen((user) async {
-      if (user != null && keepSession) {
-        // Save FCM token for push notifications
-        await sl<PushNotificationService>().saveUserToken(user.uid);
-        
-        // User exists and wants to be remembered
-        state = AuthAuthenticated(user);
-      } else if (user != null && !keepSession) {
-        // User exists but "Keep Session" is false: force logout
-        logout();
-      } else {
-        // No user session found
-        state = AuthInitial();
-      }
-    });
   }
 
   void _listenToAuthState() async {
