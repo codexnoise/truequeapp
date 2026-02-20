@@ -42,7 +42,13 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton(() => StorageService());
-  sl.registerLazySingleton(() => PushNotificationService());
+
+  sl.registerSingletonAsync<PushNotificationService>(() async {
+    final service = PushNotificationService();
+    await service.initialize();
+    return service;
+  });
+  await sl.isReady<PushNotificationService>();
 
   // External (Third-party plugins)
   sl.registerLazySingleton(() => FirebaseAuth.instance);

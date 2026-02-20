@@ -4,7 +4,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/di/injection_container.dart' as di;
-import 'core/services/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'firebase_options.dart';
 
@@ -27,9 +26,6 @@ void main() async {
 
   // Set up dependency injection (GetIt)
   await di.init();
-
-  // Initialize Push Notifications
-  await di.sl<PushNotificationService>().initialize();
 
   // Wrap the app in ProviderScope to enable Riverpod state management
   runApp(
