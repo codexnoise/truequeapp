@@ -1,45 +1,55 @@
-# TRUEQUEAPP
+# TruequeApp
 
-TRUEQUEAPP is a mobile application built with Flutter, designed for trading and exchanging items between users.
+TruequeApp is a Flutter mobile application for trading and donating items between users. It supports real-time exchange proposals, push notifications, and image uploads.
 
-## Project Structure
+## Quick Links
 
-This project follows the principles of Clean Architecture, organized by features to ensure a scalable and maintainable codebase.
-
-```
-lib/
-|
-|-- core/
-|   |-- di/                       # Dependency Injection setup (GetIt)
-|   |-- router/                   # App navigation logic (GoRouter)
-|
-|-- features/
-|   |-- auth/
-|   |   |-- data/                 # Data sources (remote/local) and repository implementations
-|   |   |-- domain/               # Core business logic (entities, repositories, use cases)
-|   |   |-- presentation/         # UI (pages, widgets) and state management (Riverpod Notifiers)
-|
-|-- main.dart                     # Main entry point of the application
-|
-|-- firebase_options.dart         # Firebase configuration
-```
-
-### Core
-The `core` directory contains shared code used across multiple features, such as dependency injection, navigation, and base classes.
-
-### Features
-Each feature is a self-contained module representing a specific functionality of the app (e.g., `auth`, `items`, `profile`). This modular approach makes it easier to develop and test features in isolation.
-
-Each feature folder is divided into three layers:
--   **Data**: Implements the repository contracts defined in the domain layer. It fetches data from sources like Firebase and exposes it to the rest of the app.
--   **Domain**: Contains the core business logic. This includes entities (the business objects), repository contracts (interfaces), and use cases (the application-specific business rules).
--   **Presentation**: Handles the UI and user interaction. It uses Riverpod for state management to react to state changes and display the appropriate UI to the user.
+- [Architecture](docs/architecture/overview.md)
+- [Features](docs/features/)
+- [Services](docs/services/)
+- [Backend (Firebase Functions)](docs/backend/firebase_functions.md)
+- [Setup Guide](docs/setup/getting_started.md)
 
 ## Tech Stack
 
--   **Framework**: Flutter
--   **State Management**: Riverpod
--   **Backend & Authentication**: Firebase
--   **Navigation**: GoRouter
--   **Dependency Injection**: GetIt
--   **Architecture**: Clean Architecture (Feature-driven)
+| Layer | Technology |
+|---|---|
+| Framework | Flutter |
+| State Management | Riverpod |
+| Navigation | GoRouter |
+| Dependency Injection | GetIt |
+| Authentication | Firebase Auth |
+| Database | Cloud Firestore |
+| Storage | Firebase Storage |
+| Push Notifications | Firebase Messaging + flutter_local_notifications |
+| Backend | Firebase Cloud Functions (Node.js 22) |
+| Architecture | Clean Architecture (Feature-driven) |
+
+## Project Structure
+
+```
+truequeapp/
+├── lib/
+│   ├── core/
+│   │   ├── di/                  # Dependency injection (GetIt)
+│   │   ├── router/              # Navigation (GoRouter)
+│   │   └── services/            # Shared services (push notifications, storage)
+│   ├── features/
+│   │   ├── auth/                # Authentication feature
+│   │   └── home/                # Items, exchanges, and home feed
+│   ├── firebase_options.dart
+│   └── main.dart
+├── functions/                   # Firebase Cloud Functions (Node.js)
+├── android/
+├── ios/
+└── docs/                        # Project documentation
+```
+
+## Getting Started
+
+See the [Getting Started guide](docs/setup/getting_started.md) for full setup instructions.
+
+```bash
+flutter pub get
+flutter run
+```
