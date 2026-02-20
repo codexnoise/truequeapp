@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../entities/item_entity.dart';
+import '../../data/models/exchange_model.dart';
 
 abstract class HomeRepository {
   Stream<List<ItemEntity>> getItems();
@@ -17,6 +18,23 @@ abstract class HomeRepository {
   Future<void> deleteItem(ItemEntity item);
 
   Future<bool> createExchangeRequest({
+    required String senderId,
+    required String receiverId,
+    required String receiverItemId,
+    String? senderItemId,
+    String? message,
+  });
+
+  Future<ExchangeModel?> getExchangeById(String exchangeId);
+
+  Future<ItemEntity?> getItemById(String itemId);
+
+  Future<Map<String, dynamic>?> getUserById(String userId);
+
+  Future<void> updateExchangeStatus(String exchangeId, String status);
+
+  Future<bool> createCounterOffer({
+    required String originalExchangeId,
     required String senderId,
     required String receiverId,
     required String receiverItemId,

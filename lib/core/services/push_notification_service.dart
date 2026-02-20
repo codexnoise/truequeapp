@@ -3,6 +3,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
 
 class PushNotificationService {
   static final PushNotificationService _instance = PushNotificationService._internal();
@@ -133,18 +135,41 @@ class PushNotificationService {
 
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.messageId}');
-    // TODO: Navigate to specific screen based on message data
+    final exchangeId = message.data['exchangeId'] as String?;
+    if (exchangeId != null) {
+      _navigateToExchangeDetail(exchangeId);
+    }
   }
 
   void _onNotificationTapped(NotificationResponse notificationResponse) {
     debugPrint('Notification tapped: ${notificationResponse.payload}');
-    // TODO: Handle notification tap and navigate
+    final payload = notificationResponse.payload;
+    if (payload != null) {
+      final exchangeId = _extractExchangeId(payload);
+      if (exchangeId != null) {
+        _navigateToExchangeDetail(exchangeId);
+      }
+    }
+  }
+
+  void _navigateToExchangeDetail(String exchangeId) {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      context.pushNamed('exchange-detail', extra: exchangeId);
+    }
+  }
+
+  String? _extractExchangeId(String payload) {
+    final regex = RegExp(r'exchangeId:\s*([\w-]+)');
+    final match = regex.firstMatch(payload);
+    return match?.group(1);
   }
 
   Future<void> saveUserToken(String userId) async {
     if (_fcmToken == null) return;
     
     _currentUserId = userId;
+
     try {
       await _firestore.collection('users').doc(userId).set({
         'fcmToken': _fcmToken,
@@ -158,6 +183,7 @@ class PushNotificationService {
 
   Future<void> removeUserToken(String userId) async {
     _currentUserId = null;
+
     try {
       await _firestore.collection('users').doc(userId).set({
         'fcmToken': FieldValue.delete(),

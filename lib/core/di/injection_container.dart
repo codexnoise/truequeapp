@@ -12,6 +12,7 @@ import '../../features/home/domain/usecases/add_item_usecase.dart';
 import '../../features/home/domain/usecases/create_exchange_usecase.dart';
 import '../../features/home/domain/usecases/delete_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
+import '../../features/home/domain/usecases/update_exchange_status_usecase.dart';
 import '../services/storage_service.dart';
 import '../services/push_notification_service.dart';
 
@@ -65,4 +66,5 @@ void setupHomeDependencies() {
   sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
   sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
   sl.registerLazySingleton(() => CreateExchangeUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateExchangeStatusUseCase(sl()));
 }

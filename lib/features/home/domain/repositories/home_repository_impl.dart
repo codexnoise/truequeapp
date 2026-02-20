@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../data/models/exchange_model.dart';
 import '../../data/models/item_model.dart';
 import '../entities/item_entity.dart';
 import 'home_repository.dart';
@@ -93,7 +94,7 @@ class HomeRepositoryImpl implements HomeRepository {
         'type': type,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'notificationSent': false, // Track if notification was sent
+        'notificationSent': false,
       };
 
       await _firestore.collection('exchanges').add(data);
@@ -103,6 +104,87 @@ class HomeRepositoryImpl implements HomeRepository {
       rethrow;
     } catch (e) {
       print('Error creating exchange request: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<ExchangeModel?> getExchangeById(String exchangeId) async {
+    try {
+      final doc = await _firestore.collection('exchanges').doc(exchangeId).get();
+      if (!doc.exists) return null;
+      return ExchangeModel.fromMap(doc.data()!, doc.id);
+    } catch (e) {
+      print('Error getting exchange: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<ItemEntity?> getItemById(String itemId) async {
+    try {
+      final doc = await _firestore.collection('items').doc(itemId).get();
+      if (!doc.exists) return null;
+      return ItemModel.fromFirestore(doc);
+    } catch (e) {
+      print('Error getting item: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getUserById(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (!doc.exists) return null;
+      return doc.data();
+    } catch (e) {
+      print('Error getting user: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<void> updateExchangeStatus(String exchangeId, String status) async {
+    await _firestore.collection('exchanges').doc(exchangeId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<bool> createCounterOffer({
+    required String originalExchangeId,
+    required String senderId,
+    required String receiverId,
+    required String receiverItemId,
+    String? senderItemId,
+    String? message,
+  }) async {
+    try {
+      await _firestore.collection('exchanges').doc(originalExchangeId).update({
+        'status': 'counter_offered',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      final data = {
+        'senderId': senderId,
+        'receiverId': receiverId,
+        'receiverItemId': receiverItemId,
+        'senderItemId': senderItemId,
+        'message': message,
+        'status': 'pending',
+        'type': senderItemId == null ? 'donation_request' : 'proposal',
+        'parentExchangeId': originalExchangeId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'notificationSent': false,
+      };
+
+      await _firestore.collection('exchanges').add(data);
+      return true;
+    } catch (e) {
+      print('Error creating counter offer: $e');
       return false;
     }
   }

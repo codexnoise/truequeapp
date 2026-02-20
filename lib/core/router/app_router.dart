@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../features/auth/presentation/pages/login_page.dart';
@@ -6,15 +7,19 @@ import '../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/home/domain/entities/item_entity.dart';
 import '../../features/home/presentation/pages/add_item_page.dart';
 import '../../features/home/presentation/pages/edit_item_page.dart';
+import '../../features/home/presentation/pages/exchange_detail_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
+
+final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Provider that manages the global routing configuration.
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/login',
 
     /// Handles automatic redirects based on the current authentication state.
@@ -66,6 +71,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final item = state.extra as ItemEntity;
           return EditItemPage(item: item);
+        },
+      ),
+      GoRoute(
+        path: '/exchange-detail',
+        name: 'exchange-detail',
+        builder: (context, state) {
+          final exchangeId = state.extra as String;
+          return ExchangeDetailPage(exchangeId: exchangeId);
         },
       ),
     ],
