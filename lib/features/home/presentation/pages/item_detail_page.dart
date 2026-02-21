@@ -65,9 +65,25 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                       myItemsAsync.when(
                         data: (items) {
                           if (items.isEmpty) {
-                            return const Text(
-                              "No tienes artículos para ofrecer. Debes enviar un mensaje explicativo.",
-                              style: TextStyle(fontSize: 14, color: Colors.blueGrey),
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange[200]!),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.info_outline, size: 18, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      "Debes publicar un artículo propio antes de poder hacer una oferta.",
+                                      style: TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                           }
                           return Column(
@@ -106,8 +122,8 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                 const Padding(
                                   padding: EdgeInsets.only(top: 8.0),
                                   child: Text(
-                                    "* Selecciona un artículo o escribe un mensaje detallando tu oferta abajo.",
-                                    style: TextStyle(fontSize: 11, color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                                    "* Selecciona un artículo para ofrecer a cambio.",
+                                    style: TextStyle(fontSize: 11, color: Colors.red, fontStyle: FontStyle.italic),
                                   ),
                                 ),
                             ],
@@ -127,54 +143,70 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                       controller: _messageController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        hintText: isDonation 
-                            ? "¿Por qué necesitas este artículo?" 
-                            : "Escribe un mensaje explicativo (obligatorio si no eliges un artículo)...",
+                        hintText: isDonation
+                            ? "¿Por qué necesitas este artículo?"
+                            : "Mensaje adicional (opcional)...",
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         hintStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
                     const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () {
-                        final message = _messageController.text.trim();
-                        
-                        // Validación: Si no es donación y no hay item, el mensaje es obligatorio
-                        if (!isDonation && _selectedOfferItem == null && message.isEmpty) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              backgroundColor: Colors.white,
-                              surfaceTintColor: Colors.white,
-                              title: const Text('Información necesaria'),
-                              content: const Text('Por favor, selecciona un artículo para intercambiar o escribe un mensaje con tu oferta.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Entendido', style: TextStyle(color: Colors.black)),
-                                ),
-                              ],
-                            ),
-                          );
-                          return;
-                        }
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final exchangeState = ref.watch(exchangeProvider);
+                        final isLoading = exchangeState is ExchangeLoading;
 
-                        ref.read(exchangeProvider.notifier).sendRequest(
-                              senderId: senderId,
-                              receiverId: widget.item.ownerId,
-                              receiverItemId: widget.item.id,
-                              senderItemId: _selectedOfferItem?.id,
-                              message: message,
-                            );
-                        Navigator.pop(context);
+                        return ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  final message = _messageController.text.trim();
+
+                                  if (!isDonation && _selectedOfferItem == null) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        backgroundColor: Colors.white,
+                                        surfaceTintColor: Colors.white,
+                                        title: const Text('Artículo requerido'),
+                                        content: const Text('Debes seleccionar un artículo para ofrecer a cambio.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('Entendido', style: TextStyle(color: Colors.black)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  ref.read(exchangeProvider.notifier).sendRequest(
+                                        senderId: senderId,
+                                        receiverId: widget.item.ownerId,
+                                        receiverItemId: widget.item.id,
+                                        senderItemId: _selectedOfferItem?.id,
+                                        message: message,
+                                      );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 60),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : Text(isDonation ? "SOLICITAR" : "ENVIAR OFERTA"),
+                        );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 60),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: Text(isDonation ? "SOLICITAR" : "ENVIAR OFERTA"),
                     ),
                     const SizedBox(height: 40),
                   ],
@@ -203,6 +235,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
       }
       if (next is ExchangeSuccess) {
         Navigator.pop(context); // Pop loading
+        Navigator.pop(context); // Pop requested article
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('¡Solicitud enviada con éxito!')),
         );
