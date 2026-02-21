@@ -136,27 +136,25 @@ class PushNotificationService {
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.messageId}');
     final exchangeId = message.data['exchangeId'] as String?;
-    if (exchangeId != null) {
-      _navigateToExchangeDetail(exchangeId);
-    }
+
+    if (exchangeId != null) _navigateToExchangeDetail(exchangeId);
   }
 
   void _onNotificationTapped(NotificationResponse notificationResponse) {
     debugPrint('Notification tapped: ${notificationResponse.payload}');
     final payload = notificationResponse.payload;
+
     if (payload != null) {
       final exchangeId = _extractExchangeId(payload);
-      if (exchangeId != null) {
-        _navigateToExchangeDetail(exchangeId);
-      }
+
+      if (exchangeId != null) _navigateToExchangeDetail(exchangeId);
     }
   }
 
   void _navigateToExchangeDetail(String exchangeId) {
     final context = navigatorKey.currentContext;
-    if (context != null) {
-      context.pushNamed('exchange-detail', extra: exchangeId);
-    }
+
+    if (context != null) context.pushNamed('exchange-detail', extra: exchangeId);
   }
 
   String? _extractExchangeId(String payload) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/di/injection_container.dart' as di;
@@ -15,6 +16,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   // Ensure Flutter bindings are initialized before any asynchronous task
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables before any service initialization
+  await dotenv.load(fileName: '.env');
 
   // Initialize Firebase with the default options for the current platform
   await Firebase.initializeApp(

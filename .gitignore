@@ -88,6 +88,13 @@ functions/.env
 functions/package-lock.json
 functions/yarn.lock
 
+# Flutter environment variables
+.env
+
+# Firebase native config files (contain API keys)
+**/google-services.json
+**/GoogleService-Info.plist
+
 # OS generated files
 Thumbs.db
 .DS_Store
