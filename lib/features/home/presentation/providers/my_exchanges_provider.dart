@@ -12,3 +12,22 @@ final receivedExchangesProvider =
     StreamProvider.family<List<ExchangeModel>, String>((ref, userId) {
   return sl<HomeRepository>().getReceivedExchanges(userId);
 });
+
+/// Returns the existing exchange for [senderId] targeting [receiverItemId], or null if none.
+final existingExchangeForItemProvider = StreamProvider.family<
+    ExchangeModel?,
+    ({String senderId, String receiverItemId})>((ref, args) {
+  return sl<HomeRepository>()
+      .getSentExchanges(args.senderId)
+      .map((exchanges) {
+    try {
+      return exchanges.firstWhere(
+        (e) =>
+            e.receiverItemId == args.receiverItemId &&
+            (e.status == 'pending' || e.status == 'accepted'),
+      );
+    } catch (_) {
+      return null;
+    }
+  });
+});

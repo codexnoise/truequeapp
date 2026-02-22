@@ -4,6 +4,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/exchange_provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/my_exchanges_provider.dart';
 
 class ItemDetailPage extends ConsumerStatefulWidget {
   final ItemEntity item;
@@ -219,6 +220,136 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
     );
   }
 
+  Widget _buildBottomSheet(BuildContext context, dynamic authState, bool isDonation) {
+    if (authState is! AuthAuthenticated) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        child: ElevatedButton(
+          onPressed: null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
+              style: const TextStyle(color: Colors.white)),
+        ),
+      );
+    }
+
+    final existingAsync = ref.watch(existingExchangeForItemProvider(
+      (senderId: authState.user.uid, receiverItemId: widget.item.id),
+    ));
+
+    return existingAsync.when(
+      loading: () => Container(
+        padding: const EdgeInsets.all(24),
+        child: ElevatedButton(
+          onPressed: null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const SizedBox(
+            height: 22,
+            width: 22,
+            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+          ),
+        ),
+      ),
+      error: (_, __) => Container(
+        padding: const EdgeInsets.all(24),
+        child: ElevatedButton(
+          onPressed: () => _showOfferDialog(authState.user.uid),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            minimumSize: const Size(double.infinity, 64),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
+              style: const TextStyle(color: Colors.white)),
+        ),
+      ),
+      data: (existing) {
+        if (existing != null) {
+          final statusLabel = existing.status == 'accepted' ? 'ACEPTADA' : 'PENDIENTE';
+          final statusColor = existing.status == 'accepted' ? Colors.green : Colors.orange;
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            color: Colors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: statusColor.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: statusColor, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          existing.status == 'accepted'
+                              ? 'Tu solicitud fue aceptada.'
+                              : 'Ya has solicitado este artículo. Tu solicitud está en espera.',
+                          style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[300],
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_outline, color: statusColor, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'SOLICITUD $statusLabel',
+                          style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: ElevatedButton(
+            onPressed: () => _showOfferDialog(authState.user.uid),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 64),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
+                style: const TextStyle(color: Colors.white)),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
@@ -287,20 +418,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           ),
         ],
       ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.all(24),
-        child: ElevatedButton(
-          onPressed: authState is AuthAuthenticated 
-              ? () => _showOfferDialog(authState.user.uid) 
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          child: Text(isDonation ? "SOLICITAR ARTÍCULO" : "HACER OFERTA", style: const TextStyle(color: Colors.white)),
-        ),
-      ),
+      bottomSheet: _buildBottomSheet(context, authState, isDonation),
     );
   }
 }
