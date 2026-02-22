@@ -109,6 +109,30 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
+  Stream<List<ExchangeModel>> getSentExchanges(String userId) {
+    return _firestore
+        .collection('exchanges')
+        .where('senderId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => ExchangeModel.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  @override
+  Stream<List<ExchangeModel>> getReceivedExchanges(String userId) {
+    return _firestore
+        .collection('exchanges')
+        .where('receiverId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => ExchangeModel.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  @override
   Future<ExchangeModel?> getExchangeById(String exchangeId) async {
     try {
       final doc = await _firestore.collection('exchanges').doc(exchangeId).get();

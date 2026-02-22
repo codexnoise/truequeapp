@@ -25,6 +25,10 @@ abstract class HomeRepository {
     String? message,
   });
 
+  Stream<List<ExchangeModel>> getSentExchanges(String userId);
+
+  Stream<List<ExchangeModel>> getReceivedExchanges(String userId);
+
   Future<ExchangeModel?> getExchangeById(String exchangeId);
 
   Future<ItemEntity?> getItemById(String itemId);
