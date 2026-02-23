@@ -61,15 +61,23 @@ sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSour
 
 ## State Management
 
-**Riverpod** is used throughout the presentation layer. Each feature exposes a `StateNotifier` provider that holds a sealed state class:
+**Riverpod 3.x** is used throughout the presentation layer. Each feature exposes a `Notifier` provider that holds a sealed state class:
 
 ```dart
 // Example sealed states
-abstract class AuthState {}
+sealed class AuthState { const AuthState(); }
 class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
-class AuthAuthenticated extends AuthState { final UserEntity user; }
-class AuthError extends AuthState { final String message; }
+class AuthAuthenticated extends AuthState { final UserEntity user; const AuthAuthenticated(this.user); }
+class AuthError extends AuthState { final String message; const AuthError(this.message); }
+
+// Notifier (replaces StateNotifier)
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() { ... }
+}
+
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(() => AuthNotifier());
 ```
 
 UI widgets watch these providers and rebuild when state changes.
@@ -78,8 +86,25 @@ UI widgets watch these providers and rebuild when state changes.
 
 **GoRouter** handles all navigation via `routerProvider` in [`lib/core/router/app_router.dart`](../../lib/core/router/app_router.dart). It automatically redirects based on `AuthState`:
 
-- `AuthAuthenticated` → `/home`
-- Not authenticated → `/login`
+| State | Redirect |
+|---|---|
+| `AuthLoading` | `/loading` (full-screen spinner while Firebase resolves session) |
+| `AuthAuthenticated` | `/home` |
+| `AuthInitial` / `AuthError` | `/login` |
+
+### Routes
+
+| Path | Page | Protected |
+|---|---|---|
+| `/loading` | Loading screen | — |
+| `/login` | `LoginPage` | — |
+| `/register` | `RegisterPage` | — |
+| `/home` | `HomePage` | ✓ |
+| `/my-items` | `MyItemsPage` | ✓ |
+| `/item-detail` | `ItemDetailPage` | ✓ |
+| `/add-item` | `AddItemPage` | ✓ |
+| `/edit-item` | `EditItemPage` | ✓ |
+| `/exchange-detail` | `ExchangeDetailPage` | ✓ |
 
 ## Directory Structure
 
@@ -114,3 +139,25 @@ lib/
 ├── firebase_options.dart
 └── main.dart
 ```
+
+## Firestore Collections
+
+| Collection | Document fields | Notes |
+|---|---|---|
+| `items` | `id`, `ownerId`, `title`, `description`, `categoryId`, `imageUrls[]`, `desiredItem`, `status` | `status: 'available'` for active items |
+| `exchanges` | `senderId`, `receiverId`, `receiverItemId`, `senderItemId?`, `message?`, `status`, `type`, `createdAt`, `updatedAt`, `notificationSent`, `parentExchangeId?` | `type`: `'proposal'` or `'donation_request'` |
+| `users` | `fcmToken?`, `tokenUpdatedAt?` | Written by `PushNotificationService` on login |
+
+### Exchange `status` values
+
+| Value | Meaning |
+|---|---|
+| `pending` | Awaiting receiver response |
+| `accepted` | Receiver accepted |
+| `rejected` | Receiver rejected |
+| `completed` | Both parties marked as done |
+| `counter_offered` | Receiver sent a counter-offer (original exchange superseded) |
+
+### Item `categoryId` values
+
+`tech`, `fashion`, `home`, `books`, `music`, `general`

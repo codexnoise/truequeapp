@@ -5,9 +5,10 @@ TruequeApp is a Flutter mobile application for trading and donating items betwee
 ## Quick Links
 
 - [Architecture](docs/architecture/overview.md)
-- [Features](docs/features/)
-- [Services](docs/services/)
-- [Backend (Firebase Functions)](docs/backend/firebase_functions.md)
+- [Feature: Auth](docs/features/auth.md)
+- [Feature: Home (Items & Exchanges)](docs/features/home.md)
+- [Service: Push Notifications](docs/services/push_notifications.md)
+- [Service: Storage](docs/services/storage.md)
 - [Setup Guide](docs/setup/getting_started.md)
 
 ## Tech Stack

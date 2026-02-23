@@ -47,7 +47,35 @@ flutterfire configure
 
 This generates `lib/firebase_options.dart` with your project credentials.
 
-### 5. Run the app
+### 5. Set up environment variables
+
+Copy the example file and fill in your Firebase credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+
+```env
+# Firebase - Android
+FIREBASE_ANDROID_API_KEY=your_android_api_key_here
+FIREBASE_ANDROID_APP_ID=your_android_app_id_here
+
+# Firebase - iOS
+FIREBASE_IOS_API_KEY=your_ios_api_key_here
+FIREBASE_IOS_APP_ID=your_ios_app_id_here
+FIREBASE_IOS_BUNDLE_ID=your_ios_bundle_id_here
+
+# Firebase - Shared
+FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+FIREBASE_PROJECT_ID=your_project_id_here
+FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
+```
+
+> **Note:** `.env` is gitignored. Never commit it to version control.
+
+### 6. Run the app
 
 ```bash
 flutter run
