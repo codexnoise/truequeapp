@@ -114,9 +114,55 @@ class _MyItemsTab extends ConsumerWidget {
           itemCount: myItems.length,
           itemBuilder: (context, index) {
             final item = myItems[index];
-            return ItemCard(
-              item: item,
-              onTap: () => context.pushNamed('edit-item', extra: item),
+            final isExchanged = item.status == 'exchanged';
+            return Stack(
+              children: [
+                ItemCard(
+                  item: item,
+                  onTap: () {
+                    if (isExchanged) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Este artículo ya fue intercambiado/donado'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                      return;
+                    }
+                    context.pushNamed('edit-item', extra: item);
+                  },
+                ),
+                if (isExchanged)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'INTERCAMBIADO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         );

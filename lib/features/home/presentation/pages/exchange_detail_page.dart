@@ -18,8 +18,9 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        ref.read(exchangeDetailProvider.notifier).loadExchange(widget.exchangeId));
+    Future.microtask(
+      () => ref.read(exchangeDetailProvider.notifier).loadExchange(widget.exchangeId),
+    );
   }
 
   @override
@@ -29,19 +30,13 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
     ref.listen<ExchangeDetailState>(exchangeDetailProvider, (prev, next) {
       if (next is ExchangeDetailSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message),
-            backgroundColor: Colors.black,
-          ),
+          SnackBar(content: Text(next.message), backgroundColor: Colors.black),
         );
         Navigator.pop(context);
       }
       if (next is ExchangeDetailError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message),
-            backgroundColor: Colors.red[800],
-          ),
+          SnackBar(content: Text(next.message), backgroundColor: Colors.red[800]),
         );
       }
     });
@@ -57,38 +52,42 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
         ),
         title: const Text(
           'Detalle del Intercambio',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
       ),
       body: switch (state) {
         ExchangeDetailInitial() || ExchangeDetailLoading() => const Center(
-            child: CircularProgressIndicator(color: Colors.black),
-          ),
+          child: CircularProgressIndicator(color: Colors.black),
+        ),
         ExchangeDetailLoaded(data: final data) => _ExchangeDetailBody(
-            data: data,
-            isActionLoading: false,
-          ),
+          data: data,
+          isActionLoading: false,
+        ),
         ExchangeDetailActionLoading(data: final data) => _ExchangeDetailBody(
-            data: data,
-            isActionLoading: true,
-          ),
+          data: data,
+          isActionLoading: true,
+        ),
         ExchangeDetailError(message: final msg) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.black38),
-                const SizedBox(height: 16),
-                Text(msg, style: const TextStyle(color: Colors.black54)),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref
-                      .read(exchangeDetailProvider.notifier)
-                      .loadExchange(widget.exchangeId),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.black38),
+              const SizedBox(height: 16),
+              Text(msg, style: const TextStyle(color: Colors.black54)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref
+                    .read(exchangeDetailProvider.notifier)
+                    .loadExchange(widget.exchangeId),
+                child: const Text('Reintentar'),
+              ),
+            ],
           ),
+        ),
         ExchangeDetailSuccess() => const SizedBox.shrink(),
       },
     );
@@ -99,16 +98,12 @@ class _ExchangeDetailBody extends ConsumerWidget {
   final ExchangeDetailData data;
   final bool isActionLoading;
 
-  const _ExchangeDetailBody({
-    required this.data,
-    required this.isActionLoading,
-  });
+  const _ExchangeDetailBody({required this.data, required this.isActionLoading});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.uid : null;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.uid : null;
     final isReceiver = currentUserId == data.exchange.receiverId;
     final isPending = data.exchange.status == 'pending';
     final isDonation = data.exchange.type == 'donation_request';
@@ -143,8 +138,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 const SizedBox(height: 24),
               ],
 
-              if (data.exchange.message != null &&
-                  data.exchange.message!.isNotEmpty) ...[
+              if (data.exchange.message != null && data.exchange.message!.isNotEmpty) ...[
                 _SectionLabel('MENSAJE'),
                 const SizedBox(height: 12),
                 Container(
@@ -169,15 +163,9 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 label: 'Tipo',
                 value: isDonation ? 'Solicitud de donación' : 'Propuesta de intercambio',
               ),
-              _InfoRow(
-                label: 'Estado',
-                value: _statusLabel(data.exchange.status),
-              ),
+              _InfoRow(label: 'Estado', value: _statusLabel(data.exchange.status)),
               if (data.exchange.createdAt != null)
-                _InfoRow(
-                  label: 'Fecha',
-                  value: _formatDate(data.exchange.createdAt!),
-                ),
+                _InfoRow(label: 'Fecha', value: _formatDate(data.exchange.createdAt!)),
             ],
           ),
         ),
@@ -225,9 +213,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
         if (isActionLoading)
           Container(
             color: Colors.black26,
-            child: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+            child: const Center(child: CircularProgressIndicator(color: Colors.white)),
           ),
       ],
     );
@@ -308,7 +294,11 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     const SizedBox(height: 24),
                     const Text(
                       'ARTÍCULO A OFRECER',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     myItemsAsync.when(
@@ -334,7 +324,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                                   margin: const EdgeInsets.only(right: 12),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: isSelected ? Colors.black : Colors.grey[300]!,
+                                      color: isSelected
+                                          ? Colors.black
+                                          : Colors.grey[300]!,
                                       width: isSelected ? 2 : 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
@@ -347,7 +339,10 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                                     color: Colors.grey[100],
                                   ),
                                   child: item.imageUrls.isEmpty
-                                      ? const Icon(Icons.image_not_supported, color: Colors.grey)
+                                      ? const Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.grey,
+                                        )
                                       : null,
                                 ),
                               );
@@ -361,7 +356,11 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     const SizedBox(height: 20),
                     const Text(
                       'MENSAJE',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -369,7 +368,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                       maxLines: 3,
                       decoration: InputDecoration(
                         hintText: 'Explica los términos de tu contraoferta...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         hintStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -379,12 +380,18 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                         final msg = messageController.text.trim();
                         if (selectedItem == null && msg.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Selecciona un artículo o escribe un mensaje')),
+                            const SnackBar(
+                              content: Text(
+                                'Selecciona un artículo o escribe un mensaje',
+                              ),
+                            ),
                           );
                           return;
                         }
                         Navigator.pop(context);
-                        ref.read(exchangeDetailProvider.notifier).sendCounterOffer(
+                        ref
+                            .read(exchangeDetailProvider.notifier)
+                            .sendCounterOffer(
                               originalExchangeId: widget.data.exchange.id,
                               senderId: widget.currentUserId,
                               receiverId: widget.data.exchange.senderId,
@@ -396,7 +403,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('ENVIAR CONTRAOFERTA'),
                     ),
@@ -427,7 +436,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(exchangeDetailProvider.notifier).rejectExchange(widget.data.exchange.id);
+              ref
+                  .read(exchangeDetailProvider.notifier)
+                  .rejectExchange(widget.data.exchange.id);
             },
             child: const Text('Rechazar', style: TextStyle(color: Colors.red)),
           ),
@@ -442,7 +453,11 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, -4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -452,16 +467,24 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
           ElevatedButton(
             onPressed: widget.isLoading
                 ? null
-                : () => ref
-                    .read(exchangeDetailProvider.notifier)
-                    .acceptExchange(widget.data.exchange.id),
+                : () {
+                    print(
+                      'DEBUG UI: Accept button pressed for exchange: ${widget.data.exchange.id}',
+                    );
+                    ref
+                        .read(exchangeDetailProvider.notifier)
+                        .acceptExchange(widget.data.exchange.id);
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('ACEPTAR PROPUESTA', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'ACEPTAR PROPUESTA',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -475,7 +498,10 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     minimumSize: const Size(0, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: const Text('CONTRAOFERTA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'CONTRAOFERTA',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -488,7 +514,10 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     minimumSize: const Size(0, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: const Text('RECHAZAR', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'RECHAZAR',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -508,7 +537,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (status) {
-      'pending' => (Colors.orange[700]!, isDonation ? 'SOLICITUD DE DONACIÓN PENDIENTE' : 'PROPUESTA PENDIENTE'),
+      'pending' => (
+        Colors.orange[700]!,
+        isDonation ? 'SOLICITUD DE DONACIÓN PENDIENTE' : 'PROPUESTA PENDIENTE',
+      ),
       'accepted' => (Colors.green[700]!, 'ACEPTADO'),
       'rejected' => (Colors.red[700]!, 'RECHAZADO'),
       'completed' => (Colors.blue[700]!, 'COMPLETADO'),
@@ -539,7 +571,12 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black54, letterSpacing: 0.5),
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w900,
+        color: Colors.black54,
+        letterSpacing: 0.5,
+      ),
     );
   }
 }
@@ -573,9 +610,15 @@ class _UserCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(
+                  name,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
                 if (email.isNotEmpty)
-                  Text(email, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                  Text(
+                    email,
+                    style: const TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
               ],
             ),
           ),
@@ -667,10 +710,16 @@ class _InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 80,
-            child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
+            ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
           ),
         ],
       ),

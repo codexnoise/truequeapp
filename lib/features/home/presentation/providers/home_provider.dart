@@ -17,9 +17,13 @@ final availableItemsProvider = Provider<AsyncValue<List<ItemEntity>>>((ref) {
   return itemsAsync.whenData((items) {
     if (authState is AuthAuthenticated) {
       final currentUserId = authState.user.uid;
-      return items.where((item) => item.ownerId != currentUserId).toList();
+      return items
+          .where((item) => 
+              item.ownerId != currentUserId && 
+              item.status == 'available')
+          .toList();
     }
-    return items;
+    return items.where((item) => item.status == 'available').toList();
   });
 });
 

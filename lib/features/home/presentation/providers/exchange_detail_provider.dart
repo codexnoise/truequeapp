@@ -96,13 +96,21 @@ class ExchangeDetailNotifier extends Notifier<ExchangeDetailState> {
   }
 
   Future<void> acceptExchange(String exchangeId) async {
+    print('DEBUG PROVIDER: acceptExchange called with exchangeId: $exchangeId');
     final current = state;
-    if (current is! ExchangeDetailLoaded) return;
+    if (current is! ExchangeDetailLoaded) {
+      print('DEBUG PROVIDER: State is not ExchangeDetailLoaded, returning');
+      return;
+    }
+    print('DEBUG PROVIDER: Setting state to ActionLoading');
     state = ExchangeDetailActionLoading(current.data);
     try {
+      print('DEBUG PROVIDER: Calling UpdateExchangeStatusUseCase.execute');
       await sl<UpdateExchangeStatusUseCase>().execute(exchangeId, 'accepted');
+      print('DEBUG PROVIDER: UpdateExchangeStatusUseCase completed successfully');
       state = const ExchangeDetailSuccess('¡Propuesta aceptada! Contacta al usuario para coordinar el intercambio.');
     } catch (e) {
+      print('ERROR PROVIDER: acceptExchange failed: $e');
       state = ExchangeDetailError(e.toString());
     }
   }

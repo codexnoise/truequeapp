@@ -16,7 +16,6 @@ class HomeRepositoryImpl implements HomeRepository {
   Stream<List<ItemEntity>> getItems() {
     return _firestore
         .collection('items')
-        .where('status', isEqualTo: 'available')
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
@@ -170,10 +169,51 @@ class HomeRepositoryImpl implements HomeRepository {
 
   @override
   Future<void> updateExchangeStatus(String exchangeId, String status) async {
-    await _firestore.collection('exchanges').doc(exchangeId).update({
-      'status': status,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    try {
+      // Update exchange status
+      await _firestore.collection('exchanges').doc(exchangeId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      // If exchange is accepted, mark the items as exchanged
+      if (status == 'accepted') {
+        final exchangeDoc = await _firestore.collection('exchanges').doc(exchangeId).get();
+
+        if (exchangeDoc.exists) {
+          final exchangeData = exchangeDoc.data()!;
+          final receiverItemId = exchangeData['receiverItemId'] as String?;
+          final senderItemId = exchangeData['senderItemId'] as String?;
+
+          // Update receiver's item status
+          if (receiverItemId != null && receiverItemId.isNotEmpty) {
+            try {
+              await _firestore.collection('items').doc(receiverItemId).update({
+                'status': 'exchanged',
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            } catch (e) {
+              print('ERROR: Failed to update receiver item: $e');
+            }
+          }
+
+          // Update sender's item status (if it's not a donation)
+          if (senderItemId != null && senderItemId.isNotEmpty) {
+            try {
+              print('DEBUG: Updating sender item status to exchanged...');
+              await _firestore.collection('items').doc(senderItemId).update({
+                'status': 'exchanged',
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            } catch (e) {
+              print('ERROR: Failed to update sender item: $e');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('ERROR: updateExchangeStatus failed: $e');
+      rethrow;
+    }
   }
 
   @override
