@@ -11,6 +11,7 @@ import '../../features/home/presentation/pages/exchange_detail_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -80,6 +81,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final exchangeId = state.extra as String;
           return ExchangeDetailPage(exchangeId: exchangeId);
         },
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsPage(),
       ),
     ],
   );

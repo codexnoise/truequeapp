@@ -386,6 +386,12 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/intl-0.20.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
       "name": "io",
       "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/io-1.0.5",
       "packageUri": "lib/",
@@ -660,6 +666,12 @@
       "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/test_core-0.6.12",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "timeago",
+      "rootUri": "file:///Users/giftpoint/.pub-cache/hosted/pub.dev/timeago-3.7.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "timezone",
