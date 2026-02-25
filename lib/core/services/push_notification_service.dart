@@ -100,6 +100,9 @@ class PushNotificationService {
     
     // Show local notification when app is in foreground
     _showLocalNotification(message);
+    
+    // Save notification to Firestore
+    _saveNotificationToFirestore(message);
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
@@ -136,6 +139,9 @@ class PushNotificationService {
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.messageId}');
     final exchangeId = message.data['exchangeId'] as String?;
+    
+    // Save notification to Firestore
+    _saveNotificationToFirestore(message);
 
     if (exchangeId != null) _navigateToExchangeDetail(exchangeId);
   }
@@ -189,6 +195,33 @@ class PushNotificationService {
       debugPrint('FCM token removed for user: $userId');
     } catch (e) {
       debugPrint('Error removing FCM token: $e');
+    }
+  }
+
+  Future<void> _saveNotificationToFirestore(RemoteMessage message) async {
+    try {
+      final userId = message.data['userId'] as String?;
+      final exchangeId = message.data['exchangeId'] as String?;
+      final type = message.data['type'] as String?;
+      
+      if (userId == null || exchangeId == null) {
+        debugPrint('Missing userId or exchangeId in notification data');
+        return;
+      }
+
+      await _firestore.collection('notifications').add({
+        'userId': userId,
+        'exchangeId': exchangeId,
+        'type': type ?? 'exchange_new',
+        'title': message.notification?.title ?? 'Nueva notificación',
+        'body': message.notification?.body ?? '',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      
+      debugPrint('Notification saved to Firestore for user: $userId');
+    } catch (e) {
+      debugPrint('Error saving notification to Firestore: $e');
     }
   }
 }

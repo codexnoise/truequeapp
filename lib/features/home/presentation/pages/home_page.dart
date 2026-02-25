@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/home_provider.dart';
 import '../widgets/category_constants.dart';
@@ -64,6 +65,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final availableItems = ref.watch(availableItemsProvider);
+    final unreadCount = ref.watch(unreadCountProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F8),
@@ -75,9 +77,38 @@ class _HomePageState extends ConsumerState<HomePage> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, letterSpacing: 2),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {},
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none, color: Colors.black),
+                onPressed: () => context.pushNamed('notifications'),
+              ),
+              if (unreadCount.hasValue && unreadCount.value! > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount.value! > 9 ? '9+' : '${unreadCount.value}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black),
