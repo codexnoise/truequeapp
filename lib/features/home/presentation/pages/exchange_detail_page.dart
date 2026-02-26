@@ -256,6 +256,20 @@ class _ActionButtons extends ConsumerStatefulWidget {
 
 class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   void _showCounterOfferSheet() {
+    final isDonation = widget.data.exchange.type == 'donation_request';
+    final senderItemId = widget.data.exchange.senderItemId;
+    
+    // Validación 1: No permitir contraoferta en donaciones
+    if (isDonation) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No puedes hacer contraoferta en una solicitud de donación'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     final messageController = TextEditingController();
     ItemEntity? selectedItem;
 
@@ -303,19 +317,39 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     const SizedBox(height: 12),
                     myItemsAsync.when(
                       data: (items) {
-                        if (items.isEmpty) {
-                          return const Text(
-                            'No tienes artículos disponibles. Usa el mensaje para detallar tu oferta.',
-                            style: TextStyle(fontSize: 13, color: Colors.blueGrey),
+                        // Validación 2: Verificar si el solicitante tiene más items disponibles
+                        final availableItems = items.where((item) => item.id != senderItemId).toList();
+                        
+                        if (availableItems.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange[200]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'No tienes otros artículos disponibles para ofrecer. El solicitante ya ofreció su único artículo.',
+                                    style: TextStyle(fontSize: 13, color: Colors.orange[900]),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         }
+                        
                         return SizedBox(
                           height: 110,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            itemCount: items.length,
+                            itemCount: availableItems.length,
                             itemBuilder: (context, index) {
-                              final item = items[index];
+                              final item = availableItems[index];
                               final isSelected = selectedItem?.id == item.id;
                               return GestureDetector(
                                 onTap: () => setModalState(() => selectedItem = item),
@@ -378,12 +412,28 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     ElevatedButton(
                       onPressed: () {
                         final msg = messageController.text.trim();
-                        if (selectedItem == null && msg.isEmpty) {
+                        
+                        // Validación 3: Requiere un artículo diferente al del solicitante
+                        if (selectedItem == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Selecciona un artículo o escribe un mensaje',
+                                'Debes seleccionar un artículo para la contraoferta',
                               ),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+                        
+                        // Validar que no sea el mismo artículo que ofreció el solicitante
+                        if (selectedItem?.id == senderItemId) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Debes seleccionar un artículo diferente al que te ofrecieron',
+                              ),
+                              backgroundColor: Colors.orange,
                             ),
                           );
                           return;
@@ -491,7 +541,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.isLoading ? null : _showCounterOfferSheet,
+                  onPressed: widget.isLoading || widget.data.exchange.type == 'donation_request' 
+                      ? null 
+                      : _showCounterOfferSheet,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black,
                     side: const BorderSide(color: Colors.black),
