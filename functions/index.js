@@ -76,8 +76,9 @@ exports.sendExchangeNotification = onDocumentCreated(
           body: body,
         },
         data: {
-          type: 'exchange_request',
+          userId: exchange.receiverId,
           exchangeId: event.params.exchangeId,
+          type: 'exchange_new',
           senderId: exchange.senderId,
           receiverItemId: exchange.receiverItemId,
           click_action: 'FLUTTER_NOTIFICATION_CLICK',
@@ -143,20 +144,28 @@ exports.updateNotificationStatus = onDocumentUpdated(
 
       console.log('Attempting to send status update to token:', fcmToken);
 
-        let title, body;
+        let title, body, notificationType;
 
         switch (after.status) {
           case 'accepted':
             title = '¡Propuesta aceptada!';
             body = 'Tu propuesta ha sido aceptada. Contacta con el otro usuario para coordinar el intercambio.';
+            notificationType = 'exchange_accepted';
             break;
           case 'rejected':
             title = 'Propuesta rechazada';
             body = 'Tu propuesta ha sido rechazada. Puedes intentar con otros artículos.';
+            notificationType = 'exchange_rejected';
+            break;
+          case 'counter_offered':
+            title = 'Nueva contraoferta';
+            body = 'Has recibido una contraoferta. Revisa los detalles.';
+            notificationType = 'exchange_counter_offered';
             break;
           case 'completed':
             title = '¡Intercambio completado!';
             body = 'El intercambio ha sido marcado como completado. ¡Gracias por usar TruequeApp!';
+            notificationType = 'exchange_completed';
             break;
           default:
             return null;
@@ -169,8 +178,9 @@ exports.updateNotificationStatus = onDocumentUpdated(
             body: body,
           },
           data: {
-            type: 'exchange_status_update',
+            userId: after.senderId,
             exchangeId: event.params.exchangeId,
+            type: notificationType,
             status: after.status,
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
           },
