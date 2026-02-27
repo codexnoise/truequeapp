@@ -10,7 +10,7 @@ abstract class AuthRepository {
   /// Creates a new user account with the provided [email] and [password].
   ///
   /// Returns a [UserEntity] representing the newly created user.
-  Future<UserEntity?> signUp(String email, String password);
+  Future<UserEntity?> signUp(String email, String password, String name, String phoneNumber);
 
   /// Signs out the currently authenticated user.
   Future<void> signOut();

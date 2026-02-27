@@ -20,15 +20,23 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return await remoteDataSource.signIn(email, password);
     } catch (e) {
-      // Here you could add a logger or handle specific repository-level errors
       rethrow;
     }
   }
 
   @override
-  Future<UserEntity?> signUp(String email, String password) async {
+  Future<UserEntity?> signUp(String email, String password, String name, String phoneNumber) async {
     try {
-      return await remoteDataSource.signUp(email, password);
+      final userModel = await remoteDataSource.signUp(email, password, name, phoneNumber);
+      if (userModel != null) {
+        return UserEntity(
+          uid: userModel.uid,
+          email: userModel.email,
+          name: userModel.name,
+          phoneNumber: userModel.phoneNumber,
+        );
+      }
+      return null;
     } catch (e) {
       rethrow;
     }

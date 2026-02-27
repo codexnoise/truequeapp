@@ -94,10 +94,10 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password) async {
+  Future<void> register(String email, String password, String name, String phoneNumber) async {
     state = AuthLoading();
     try {
-      final user = await sl<RegisterUseCase>().execute(email, password);
+      final user = await sl<RegisterUseCase>().execute(email, password, name, phoneNumber);
       if (user != null) {
         // Save FCM token for push notifications
         await sl<PushNotificationService>().saveUserToken(user.uid);

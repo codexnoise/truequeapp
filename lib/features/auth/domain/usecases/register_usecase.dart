@@ -7,8 +7,8 @@ class RegisterUseCase {
 
   RegisterUseCase(this.repository);
 
-  /// Executes the registration process with [email] and [password]
-  Future<UserEntity?> execute(String email, String password) {
-    return repository.signUp(email, password);
+  /// Executes the registration process with [email], [password], [name], and [phoneNumber]
+  Future<UserEntity?> execute(String email, String password, String name, String phoneNumber) {
+    return repository.signUp(email, password, name, phoneNumber);
   }
 }
