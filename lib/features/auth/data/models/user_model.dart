@@ -6,6 +6,7 @@ class UserModel extends UserEntity {
     required super.uid,
     required super.email,
     super.name,
+    super.phoneNumber,
     super.photoUrl,
   });
 
@@ -15,6 +16,7 @@ class UserModel extends UserEntity {
       uid: user.uid,
       email: user.email ?? '',
       name: user.displayName,
+      phoneNumber: user.phoneNumber,
       photoUrl: user.photoURL,
     );
   }
@@ -25,6 +27,7 @@ class UserModel extends UserEntity {
       'uid': uid,
       'email': email,
       'name': name,
+      'phoneNumber': phoneNumber,
       'photoUrl': photoUrl,
     };
   }
