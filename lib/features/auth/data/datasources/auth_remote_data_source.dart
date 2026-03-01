@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -10,8 +11,9 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore;
 
-  AuthRemoteDataSourceImpl(this._firebaseAuth);
+  AuthRemoteDataSourceImpl(this._firebaseAuth, this._firestore);
 
   @override
   Stream<UserModel?> get userStream {
@@ -48,16 +50,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (credential.user != null) {
         // Update Firebase User Profile (displayName)
         await credential.user!.updateDisplayName(name);
-        // Note: For phoneNumber, usually you'd store it in Firestore as Firebase Auth 
-        // phone number is for phone authentication. But for this requirement, we'll 
-        // rely on the UserModel to represent it or store in Firestore if needed later.
         
-        return UserModel(
+        // Create user model
+        final userModel = UserModel(
           uid: credential.user!.uid,
           email: credential.user!.email!,
           name: name,
           phoneNumber: phoneNumber,
         );
+        
+        // Save user data to Firestore 'users' collection
+        await _firestore.collection('users').doc(credential.user!.uid).set(userModel.toMap());
+        
+        return userModel;
       }
       return null;
     } catch (e) {

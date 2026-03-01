@@ -42,7 +42,7 @@ Future<void> init() async {
 
   // Data sources (External communication)
   sl.registerLazySingleton<AuthRemoteDataSource>(
-        () => AuthRemoteDataSourceImpl(sl()),
+        () => AuthRemoteDataSourceImpl(sl(), sl()),
   );
 
   // Core
