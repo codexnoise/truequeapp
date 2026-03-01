@@ -66,8 +66,8 @@ exports.sendExchangeNotification = onDocumentCreated(
       const isDonation = exchange.type === 'donation_request';
       const title = isDonation ? '¡Nueva solicitud de donación!' : '¡Nueva propuesta de intercambio!';
       const body = isDonation
-        ? `${sender.displayName || 'Alguien'} ha solicitado tu artículo "${item.title}"`
-        : `${sender.displayName || 'Alguien'} quiere intercambiar por "${item.title}"`;
+        ? `${sender.name || 'Alguien'} ha solicitado tu artículo "${item.title}"`
+        : `${sender.name || 'Alguien'} quiere intercambiar tu artículo "${item.title}"`;
 
       const message = {
         token: fcmToken,
