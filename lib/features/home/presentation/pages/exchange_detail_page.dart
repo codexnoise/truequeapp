@@ -416,11 +416,17 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                         // Validación 3: Requiere un artículo diferente al del solicitante
                         if (selectedItem == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
+                            SnackBar(
+                              content: const Text(
                                 'Debes seleccionar un artículo para la contraoferta',
                               ),
                               backgroundColor: Colors.orange,
+                              behavior: SnackBarBehavior.floating,
+                              margin: EdgeInsets.only(
+                                bottom: MediaQuery.of(context).size.height - 150,
+                                left: 10,
+                                right: 10,
+                              ),
                             ),
                           );
                           return;
@@ -429,11 +435,17 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                         // Validar que no sea el mismo artículo que ofreció el solicitante
                         if (selectedItem?.id == senderItemId) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
+                            SnackBar(
+                              content: const Text(
                                 'Debes seleccionar un artículo diferente al que te ofrecieron',
                               ),
                               backgroundColor: Colors.orange,
+                              behavior: SnackBarBehavior.floating,
+                              margin: EdgeInsets.only(
+                                bottom: MediaQuery.of(context).size.height - 150,
+                                left: 10,
+                                right: 10,
+                              ),
                             ),
                           );
                           return;
