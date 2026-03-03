@@ -9,6 +9,7 @@ class ExchangeModel {
   final String? message;
   final String status;
   final String type;
+  final String? parentExchangeId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +22,7 @@ class ExchangeModel {
     this.message,
     required this.status,
     required this.type,
+    this.parentExchangeId,
     this.createdAt,
     this.updatedAt,
   });
@@ -34,6 +36,7 @@ class ExchangeModel {
       'message': message,
       'status': status,
       'type': type,
+      'parentExchangeId': parentExchangeId,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -49,6 +52,7 @@ class ExchangeModel {
       message: map['message'],
       status: map['status'] ?? 'pending',
       type: map['type'] ?? '',
+      parentExchangeId: map['parentExchangeId'],
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
     );

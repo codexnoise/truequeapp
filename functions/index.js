@@ -124,6 +124,22 @@ exports.updateNotificationStatus = onDocumentUpdated(
     const before = event.data.before.data();
     const after = event.data.after.data();
 
+    // If a counter-offer is accepted, close the parent exchange
+    if (before.status !== 'accepted' && after.status === 'accepted' && after.parentExchangeId) {
+      try {
+        await admin.firestore()
+          .collection('exchanges')
+          .doc(after.parentExchangeId)
+          .update({
+            status: 'closed',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        console.log('Parent exchange closed:', after.parentExchangeId);
+      } catch (error) {
+        console.error('Error closing parent exchange:', error);
+      }
+    }
+
     // Send notification when status changes
     if (before.status !== after.status) {
       try {
@@ -158,8 +174,15 @@ exports.updateNotificationStatus = onDocumentUpdated(
             notificationType = 'exchange_rejected';
             break;
           case 'counter_offered':
+            // Get the receiver's name for counter-offer notification
+            const receiverDoc = await admin.firestore()
+              .collection('users')
+              .doc(after.receiverId)
+              .get();
+            const name = receiverDoc.exists ? receiverDoc.data().name : 'Alguien';
+            
             title = 'Nueva contraoferta';
-            body = 'Has recibido una contraoferta. Revisa los detalles.';
+            body = `${name} ha enviado una contraoferta. Revisa los detalles de la nueva propuesta.`;
             notificationType = 'exchange_counter_offered';
             break;
           case 'completed':

@@ -257,6 +257,7 @@ class _ActionButtons extends ConsumerStatefulWidget {
 class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   void _showCounterOfferSheet() {
     final isDonation = widget.data.exchange.type == 'donation_request';
+    final isCounterOffer = widget.data.exchange.parentExchangeId != null;
     final senderItemId = widget.data.exchange.senderItemId;
     
     // Validación 1: No permitir contraoferta en donaciones
@@ -265,6 +266,23 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
         const SnackBar(
           content: Text('No puedes hacer contraoferta en una solicitud de donación'),
           backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Validación 2: No permitir contraoferta sobre una contraoferta (evitar bucle infinito)
+    if (isCounterOffer) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No puedes hacer contraoferta sobre una contraoferta. Solo puedes aceptar o rechazar.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 150,
+            left: 10,
+            right: 10,
+          ),
         ),
       );
       return;
@@ -457,7 +475,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                               originalExchangeId: widget.data.exchange.id,
                               senderId: widget.currentUserId,
                               receiverId: widget.data.exchange.senderId,
-                              receiverItemId: widget.data.exchange.receiverItemId,
+                              receiverItemId: widget.data.exchange.senderItemId!,
                               senderItemId: selectedItem?.id,
                               message: msg.isEmpty ? null : msg,
                             );
@@ -553,7 +571,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.isLoading || widget.data.exchange.type == 'donation_request' 
+                  onPressed: widget.isLoading || 
+                      widget.data.exchange.type == 'donation_request' ||
+                      widget.data.exchange.parentExchangeId != null
                       ? null 
                       : _showCounterOfferSheet,
                   style: OutlinedButton.styleFrom(
