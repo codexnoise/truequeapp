@@ -140,6 +140,22 @@ exports.updateNotificationStatus = onDocumentUpdated(
       }
     }
 
+    // If a counter-offer is rejected, restore parent exchange to pending
+    if (before.status !== 'rejected' && after.status === 'rejected' && after.parentExchangeId) {
+      try {
+        await admin.firestore()
+          .collection('exchanges')
+          .doc(after.parentExchangeId)
+          .update({
+            status: 'pending',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        console.log('Parent exchange restored to pending:', after.parentExchangeId);
+      } catch (error) {
+        console.error('Error restoring parent exchange:', error);
+      }
+    }
+
     // Send notification when status changes
     if (before.status !== after.status) {
       try {
