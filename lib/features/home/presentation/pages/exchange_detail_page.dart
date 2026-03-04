@@ -106,6 +106,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
     final currentUserId = authState is AuthAuthenticated ? authState.user.uid : null;
     final isReceiver = currentUserId == data.exchange.receiverId;
     final isPending = data.exchange.status == 'pending';
+    final isClosed = data.exchange.status == 'closed';
     final isDonation = data.exchange.type == 'donation_request';
 
     final senderName = data.senderUser['displayName'] as String? ?? 'Usuario';
@@ -210,6 +211,37 @@ class _ExchangeDetailBody extends ConsumerWidget {
             ),
           ),
 
+        if (isClosed)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  border: Border.all(color: Colors.orange[200]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: Colors.orange[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Esta propuesta fue cerrada porque se aceptó una contraoferta',
+                        style: TextStyle(color: Colors.orange[900], fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         if (isActionLoading)
           Container(
             color: Colors.black26,
@@ -226,6 +258,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
       'rejected' => 'Rechazado',
       'completed' => 'Completado',
       'counter_offered' => 'Contraoferta enviada',
+      'closed' => 'Cerrado por contraoferta aceptada',
       _ => status,
     };
   }
@@ -629,6 +662,7 @@ class _StatusBadge extends StatelessWidget {
       'rejected' => (Colors.red[700]!, 'RECHAZADO'),
       'completed' => (Colors.blue[700]!, 'COMPLETADO'),
       'counter_offered' => (Colors.purple[700]!, 'CONTRAOFERTA ENVIADA'),
+      'closed' => (Colors.grey[700]!, 'CERRADO POR CONTRAOFERTA ACEPTADA'),
       _ => (Colors.grey[700]!, status.toUpperCase()),
     };
 

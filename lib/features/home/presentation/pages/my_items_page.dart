@@ -319,6 +319,7 @@ class _ExchangeCard extends StatelessWidget {
       'rejected' => (Colors.red, 'Rechazado'),
       'completed' => (Colors.blue, 'Completado'),
       'counter_offered' => (Colors.purple, 'Contraoferta'),
+      'closed' => (Colors.grey[600]!, 'Cerrada'),
       _ => (Colors.grey, status),
     };
   }
