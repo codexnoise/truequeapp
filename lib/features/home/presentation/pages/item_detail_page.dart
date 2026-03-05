@@ -65,7 +65,10 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                       const SizedBox(height: 12),
                       myItemsAsync.when(
                         data: (items) {
-                          if (items.isEmpty) {
+                          // Filter out exchanged items, only show available items
+                          final availableItems = items.where((item) => item.status == 'available').toList();
+                          
+                          if (availableItems.isEmpty) {
                             return Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -94,9 +97,9 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                 height: 120,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: items.length,
+                                  itemCount: availableItems.length,
                                   itemBuilder: (context, index) {
-                                    final item = items[index];
+                                    final item = availableItems[index];
                                     final isSelected = _selectedOfferItem?.id == item.id;
                                     return GestureDetector(
                                       onTap: () => setModalState(() => _selectedOfferItem = item),
