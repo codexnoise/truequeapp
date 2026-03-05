@@ -32,7 +32,9 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message), backgroundColor: Colors.black),
         );
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
       }
       if (next is ExchangeDetailError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -292,6 +294,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
     final isDonation = widget.data.exchange.type == 'donation_request';
     final isCounterOffer = widget.data.exchange.parentExchangeId != null;
     final senderItemId = widget.data.exchange.senderItemId;
+    final receiverItemId = widget.data.exchange.receiverItemId;
     
     // Validación 1: No permitir contraoferta en donaciones
     if (isDonation) {
@@ -368,8 +371,12 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     const SizedBox(height: 12),
                     myItemsAsync.when(
                       data: (items) {
-                        // Validación 2: Verificar si el solicitante tiene más items disponibles
-                        final availableItems = items.where((item) => item.id != senderItemId).toList();
+                        // Filtrar: solo items disponibles, excluyendo el item solicitado originalmente y el ofrecido por el solicitante
+                        final availableItems = items.where((item) => 
+                          item.status == 'available' && 
+                          item.id != receiverItemId && 
+                          item.id != senderItemId
+                        ).toList();
                         
                         if (availableItems.isEmpty) {
                           return Container(
