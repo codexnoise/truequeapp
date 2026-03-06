@@ -1,4 +1,4 @@
-const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
@@ -156,6 +156,137 @@ exports.updateNotificationStatus = onDocumentUpdated(
       }
     }
 
+    // If an exchange is accepted, cancel all other pending exchanges for the same items
+    if (before.status !== 'accepted' && after.status === 'accepted') {
+      try {
+        const receiverItemId = after.receiverItemId;
+        const senderItemId = after.senderItemId;
+        const acceptedExchangeId = event.params.exchangeId;
+
+        // Find all pending AND counter_offered exchanges involving these items
+        const pendingExchanges = await admin.firestore()
+          .collection('exchanges')
+          .where('status', '==', 'pending')
+          .get();
+        
+        const counterOfferedExchanges = await admin.firestore()
+          .collection('exchanges')
+          .where('status', '==', 'counter_offered')
+          .get();
+        
+        // Combine both query results
+        const allExchanges = [...pendingExchanges.docs, ...counterOfferedExchanges.docs];
+
+        const batch = admin.firestore().batch();
+        const usersToNotify = new Set();
+        const cancelledExchangeIds = new Set();
+
+        allExchanges.forEach((doc) => {
+          const exchange = doc.data();
+          const exchangeId = doc.id;
+
+          // Skip the accepted exchange itself
+          if (exchangeId === acceptedExchangeId) return;
+
+          // Check if this exchange involves either of the items
+          if (exchange.receiverItemId === receiverItemId || 
+              exchange.receiverItemId === senderItemId ||
+              (exchange.senderItemId && exchange.senderItemId === receiverItemId) ||
+              (exchange.senderItemId && exchange.senderItemId === senderItemId)) {
+            
+            // Cancel this exchange
+            batch.update(doc.ref, {
+              status: 'cancelled',
+              cancelledReason: 'item_no_longer_available',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // Track users to notify (both sender and receiver)
+            usersToNotify.add(exchange.senderId);
+            usersToNotify.add(exchange.receiverId);
+            cancelledExchangeIds.add(exchangeId);
+
+            console.log(`Cancelling exchange ${exchangeId} due to accepted exchange ${acceptedExchangeId}`);
+          }
+        });
+
+        await batch.commit();
+        
+        // Also cancel any counter-offers that have these cancelled exchanges as parents
+        const counterOfferBatch = admin.firestore().batch();
+        const counterOffersSnapshot = await admin.firestore()
+          .collection('exchanges')
+          .where('status', '==', 'pending')
+          .get();
+        
+        counterOffersSnapshot.forEach((doc) => {
+          const counterOffer = doc.data();
+          if (counterOffer.parentExchangeId && cancelledExchangeIds.has(counterOffer.parentExchangeId)) {
+            counterOfferBatch.update(doc.ref, {
+              status: 'cancelled',
+              cancelledReason: 'parent_exchange_cancelled',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            usersToNotify.add(counterOffer.senderId);
+            usersToNotify.add(counterOffer.receiverId);
+            console.log(`Cancelling counter-offer ${doc.id} due to parent cancellation`);
+          }
+        });
+        
+        await counterOfferBatch.commit();
+        console.log(`Cancelled ${usersToNotify.size} exchanges due to acceptance`);
+
+        // Send notifications to affected users
+        for (const userId of usersToNotify) {
+          try {
+            const userDoc = await admin.firestore().collection('users').doc(userId).get();
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              const fcmToken = userData.fcmToken;
+
+              if (fcmToken) {
+                const message = {
+                  token: fcmToken,
+                  notification: {
+                    title: 'Intercambio cancelado',
+                    body: 'Un intercambio ha sido cancelado porque el artículo ya no está disponible.',
+                  },
+                  data: {
+                    userId: userId,
+                    type: 'exchange_cancelled',
+                    reason: 'item_no_longer_available',
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                  },
+                  android: {
+                    priority: 'high',
+                    notification: {
+                      sound: 'default',
+                      channelId: 'exchange_requests',
+                    },
+                  },
+                  apns: {
+                    payload: {
+                      aps: {
+                        sound: 'default',
+                        badge: 1,
+                      },
+                    },
+                  },
+                };
+
+                await admin.messaging().send(message);
+                console.log(`Cancellation notification sent to user ${userId}`);
+              }
+            }
+          } catch (error) {
+            console.error(`Error sending cancellation notification to user ${userId}:`, error);
+          }
+        }
+      } catch (error) {
+        console.error('Error cancelling other exchanges:', error);
+      }
+    }
+
     // Send notification when status changes
     if (before.status !== after.status) {
       try {
@@ -206,6 +337,11 @@ exports.updateNotificationStatus = onDocumentUpdated(
             body = 'El intercambio ha sido marcado como completado. ¡Gracias por usar TruequeApp!';
             notificationType = 'exchange_completed';
             break;
+          case 'cancelled':
+            title = 'Intercambio cancelado';
+            body = 'El intercambio ha sido cancelado porque el artículo ya no está disponible.';
+            notificationType = 'exchange_cancelled';
+            break;
           default:
             return null;
         }
@@ -248,5 +384,128 @@ exports.updateNotificationStatus = onDocumentUpdated(
     }
 
     return null;
+  }
+);
+
+// Cancel pending exchanges when an item is deleted
+exports.cancelExchangesOnItemDelete = onDocumentDeleted(
+  'items/{itemId}',
+  async (event) => {
+    const itemId = event.params.itemId;
+    console.log(`Item ${itemId} deleted, cancelling related exchanges...`);
+
+    try {
+      // Find all pending exchanges involving this item
+      const exchangesSnapshot = await admin.firestore()
+        .collection('exchanges')
+        .where('status', '==', 'pending')
+        .get();
+
+      const batch = admin.firestore().batch();
+      const usersToNotify = new Set();
+      const cancelledExchangeIds = new Set();
+
+      exchangesSnapshot.forEach((doc) => {
+        const exchange = doc.data();
+        const exchangeId = doc.id;
+        
+        // Check if this exchange involves the deleted item
+        if (exchange.receiverItemId === itemId || 
+            (exchange.senderItemId && exchange.senderItemId === itemId)) {
+          
+          // Cancel this exchange
+          batch.update(doc.ref, {
+            status: 'cancelled',
+            cancelledReason: 'item_deleted',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Track users to notify (both sender and receiver)
+          usersToNotify.add(exchange.senderId);
+          usersToNotify.add(exchange.receiverId);
+          cancelledExchangeIds.add(exchangeId);
+
+          console.log(`Cancelling exchange ${exchangeId} due to item deletion`);
+        }
+      });
+
+      await batch.commit();
+      
+      // Also cancel any counter-offers that have these cancelled exchanges as parents
+      const counterOfferBatch = admin.firestore().batch();
+      const counterOffersSnapshot = await admin.firestore()
+        .collection('exchanges')
+        .where('status', '==', 'pending')
+        .get();
+      
+      counterOffersSnapshot.forEach((doc) => {
+        const counterOffer = doc.data();
+        if (counterOffer.parentExchangeId && cancelledExchangeIds.has(counterOffer.parentExchangeId)) {
+          counterOfferBatch.update(doc.ref, {
+            status: 'cancelled',
+            cancelledReason: 'parent_exchange_cancelled',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          usersToNotify.add(counterOffer.senderId);
+          usersToNotify.add(counterOffer.receiverId);
+          console.log(`Cancelling counter-offer ${doc.id} due to parent cancellation`);
+        }
+      });
+      
+      await counterOfferBatch.commit();
+      console.log(`Cancelled exchanges for deleted item ${itemId}`);
+
+      // Send notifications to affected users
+      for (const userId of usersToNotify) {
+        try {
+          const userDoc = await admin.firestore().collection('users').doc(userId).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            const fcmToken = userData.fcmToken;
+
+            if (fcmToken) {
+              const message = {
+                token: fcmToken,
+                notification: {
+                  title: 'Intercambio cancelado',
+                  body: 'Un intercambio ha sido cancelado porque el artículo fue eliminado.',
+                },
+                data: {
+                  userId: userId,
+                  type: 'exchange_cancelled',
+                  reason: 'item_deleted',
+                  click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                },
+                android: {
+                  priority: 'high',
+                  notification: {
+                    sound: 'default',
+                    channelId: 'exchange_requests',
+                  },
+                },
+                apns: {
+                  payload: {
+                    aps: {
+                      sound: 'default',
+                      badge: 1,
+                    },
+                  },
+                },
+              };
+
+              await admin.messaging().send(message);
+              console.log(`Cancellation notification sent to user ${userId}`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error sending cancellation notification to user ${userId}:`, error);
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error cancelling exchanges on item delete:', error);
+      return null;
+    }
   }
 );
