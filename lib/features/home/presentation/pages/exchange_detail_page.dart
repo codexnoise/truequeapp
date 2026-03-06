@@ -32,9 +32,10 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message), backgroundColor: Colors.black),
         );
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
-        }
+
+        Navigator.pop(context);
+        
+        if (Navigator.canPop(context)) Navigator.pop(context);
       }
       if (next is ExchangeDetailError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,6 +110,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
     final isReceiver = currentUserId == data.exchange.receiverId;
     final isPending = data.exchange.status == 'pending';
     final isClosed = data.exchange.status == 'closed';
+    final isCancelled = data.exchange.status == 'cancelled';
     final isDonation = data.exchange.type == 'donation_request';
 
     final senderName = data.senderUser['displayName'] as String? ?? 'Usuario';
@@ -244,6 +246,37 @@ class _ExchangeDetailBody extends ConsumerWidget {
             ),
           ),
 
+        if (isCancelled)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  border: Border.all(color: Colors.red[200]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.cancel_outlined, size: 20, color: Colors.red[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Este intercambio fue cancelado porque el artículo ya no está disponible',
+                        style: TextStyle(color: Colors.red[900], fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         if (isActionLoading)
           Container(
             color: Colors.black26,
@@ -261,6 +294,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
       'completed' => 'Completado',
       'counter_offered' => 'Contraoferta enviada',
       'closed' => 'Cerrado por contraoferta aceptada',
+      'cancelled' => 'Cancelado',
       _ => status,
     };
   }
@@ -670,6 +704,7 @@ class _StatusBadge extends StatelessWidget {
       'completed' => (Colors.blue[700]!, 'COMPLETADO'),
       'counter_offered' => (Colors.purple[700]!, 'CONTRAOFERTA ENVIADA'),
       'closed' => (Colors.grey[700]!, 'CERRADO POR CONTRAOFERTA ACEPTADA'),
+      'cancelled' => (Colors.red[700]!, 'CANCELADO - ARTÍCULO NO DISPONIBLE'),
       _ => (Colors.grey[700]!, status.toUpperCase()),
     };
 
