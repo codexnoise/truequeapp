@@ -14,6 +14,9 @@ import '../../features/home/domain/usecases/create_exchange_usecase.dart';
 import '../../features/home/domain/usecases/delete_item_usecase.dart';
 import '../../features/home/domain/usecases/get_items_usecase.dart';
 import '../../features/home/domain/usecases/update_exchange_status_usecase.dart';
+import '../../features/messages/data/repositories/message_repository_impl.dart';
+import '../../features/messages/domain/repositories/message_repository.dart';
+import '../../features/messages/domain/usecases/send_message_usecase.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../services/storage_service.dart';
@@ -33,6 +36,7 @@ Future<void> init() async {
 
   setupHomeDependencies();
   setupNotificationDependencies();
+  setupMessageDependencies();
 
   // Repositories (Contracts implementation)
   // We register the implementation linked to the abstract contract
@@ -72,6 +76,16 @@ void setupHomeDependencies() {
   sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
   sl.registerLazySingleton(() => CreateExchangeUseCase(sl()));
   sl.registerLazySingleton(() => UpdateExchangeStatusUseCase(sl()));
+}
+
+void setupMessageDependencies() {
+  // Repository
+  sl.registerLazySingleton<MessageRepository>(
+    () => MessageRepositoryImpl(sl(), sl()),
+  );
+
+  // UseCases
+  sl.registerLazySingleton(() => SendMessageUseCase(sl()));
 }
 
 void setupNotificationDependencies() {

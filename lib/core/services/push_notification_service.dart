@@ -139,11 +139,18 @@ class PushNotificationService {
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.messageId}');
     final exchangeId = message.data['exchangeId'] as String?;
+    final type = message.data['type'] as String?;
     
     // Save notification to Firestore
     _saveNotificationToFirestore(message);
 
-    if (exchangeId != null) _navigateToExchangeDetail(exchangeId);
+    if (exchangeId != null) {
+      if (type == 'new_message') {
+        _navigateToChat(exchangeId, message.data);
+      } else {
+        _navigateToExchangeDetail(exchangeId);
+      }
+    }
   }
 
   void _onNotificationTapped(NotificationResponse notificationResponse) {
@@ -152,8 +159,15 @@ class PushNotificationService {
 
     if (payload != null) {
       final exchangeId = _extractExchangeId(payload);
+      final isMessageNotification = payload.contains('type: new_message');
 
-      if (exchangeId != null) _navigateToExchangeDetail(exchangeId);
+      if (exchangeId != null) {
+        if (isMessageNotification) {
+          _navigateToChat(exchangeId, {});
+        } else {
+          _navigateToExchangeDetail(exchangeId);
+        }
+      }
     }
   }
 
@@ -161,6 +175,20 @@ class PushNotificationService {
     final context = navigatorKey.currentContext;
 
     if (context != null) context.pushNamed('exchange-detail', extra: exchangeId);
+  }
+
+  void _navigateToChat(String exchangeId, Map<String, dynamic> data) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    context.pushNamed(
+      'chat',
+      extra: {
+        'exchangeId': exchangeId,
+        'otherUserName': data['senderName'] as String? ?? 'Usuario',
+        'otherUserId': data['senderId'] as String? ?? '',
+      },
+    );
   }
 
   String? _extractExchangeId(String payload) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/exchange_detail_provider.dart';
@@ -109,6 +110,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
     final currentUserId = authState is AuthAuthenticated ? authState.user.uid : null;
     final isReceiver = currentUserId == data.exchange.receiverId;
     final isPending = data.exchange.status == 'pending';
+    final isAccepted = data.exchange.status == 'accepted';
     final isClosed = data.exchange.status == 'closed';
     final isCancelled = data.exchange.status == 'cancelled';
     final isDonation = data.exchange.type == 'donation_request';
@@ -272,6 +274,59 @@ class _ExchangeDetailBody extends ConsumerWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+
+        if (isAccepted && currentUserId != null)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final isSender = currentUserId == data.exchange.senderId;
+                  final otherUserId = isSender
+                      ? data.exchange.receiverId
+                      : data.exchange.senderId;
+                  final otherUserName = isSender
+                      ? (data.receiverUser['displayName'] as String? ?? 'Usuario')
+                      : (data.senderUser['displayName'] as String? ?? 'Usuario');
+                  context.pushNamed(
+                    'chat',
+                    extra: {
+                      'exchangeId': data.exchange.id,
+                      'otherUserName': otherUserName,
+                      'otherUserId': otherUserId,
+                    },
+                  );
+                },
+                icon: const Icon(Icons.chat, size: 20),
+                label: const Text(
+                  'ENVIAR MENSAJE',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),

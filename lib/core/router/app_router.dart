@@ -11,6 +11,8 @@ import '../../features/home/presentation/pages/exchange_detail_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
+import '../../features/messages/presentation/pages/chat_page.dart';
+import '../../features/messages/presentation/pages/conversations_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -86,6 +88,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: '/conversations',
+        name: 'conversations',
+        builder: (context, state) => const ConversationsPage(),
+      ),
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          return ChatPage(
+            exchangeId: data['exchangeId'] as String,
+            otherUserName: data['otherUserName'] as String,
+            otherUserId: data['otherUserId'] as String,
+          );
+        },
       ),
     ],
   );

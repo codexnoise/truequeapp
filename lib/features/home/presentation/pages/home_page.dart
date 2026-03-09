@@ -33,7 +33,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         // Si ya estás en home, no hagas nada. Considera refrescar.
         break;
       case 1:
-        // TODO: Implementar navegación a la página de mensajes
+        context.pushNamed('conversations');
         break;
       case 2:
         context.pushNamed('my-items');
