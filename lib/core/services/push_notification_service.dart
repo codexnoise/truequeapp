@@ -237,6 +237,13 @@ class PushNotificationService {
         return;
       }
 
+      // Skip new_message type: already persisted by sendMessage() in MessageRepository.
+      // Saving it again would re-trigger the Cloud Function and cause an infinite loop.
+      if (type == 'new_message') {
+        debugPrint('Skipping Firestore save for new_message (already exists)');
+        return;
+      }
+
       await _firestore.collection('notifications').add({
         'userId': userId,
         'exchangeId': exchangeId,

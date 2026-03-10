@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../home/domain/repositories/home_repository.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/notification_item_widget.dart';
 
@@ -93,7 +95,28 @@ class NotificationsPage extends ConsumerWidget {
                         .markAsRead(notification.id);
                   }
                   
-                  if (context.mounted) {
+                  if (!context.mounted) return;
+
+                  if (notification.type == 'new_message') {
+                    final repo = sl<HomeRepository>();
+                    final exchange = await repo.getExchangeById(notification.exchangeId);
+                    if (exchange == null || !context.mounted) return;
+
+                    final isSender = currentUserId == exchange.senderId;
+                    final otherUserId = isSender ? exchange.receiverId : exchange.senderId;
+                    final otherUserData = await repo.getUserById(otherUserId);
+                    final otherUserName = otherUserData?['displayName'] as String? ?? 'Usuario';
+
+                    if (!context.mounted) return;
+                    context.pushNamed(
+                      'chat',
+                      extra: {
+                        'exchangeId': notification.exchangeId,
+                        'otherUserName': otherUserName,
+                        'otherUserId': otherUserId,
+                      },
+                    );
+                  } else {
                     context.pushNamed(
                       'exchange-detail',
                       extra: notification.exchangeId,

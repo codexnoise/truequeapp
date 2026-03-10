@@ -106,6 +106,8 @@ class NotificationItemWidget extends StatelessWidget {
         return Icons.swap_horiz;
       case 'exchange_new':
         return Icons.notification_important_outlined;
+      case 'new_message':
+        return Icons.chat_bubble_outline;
       default:
         return Icons.notifications_outlined;
     }
@@ -121,6 +123,8 @@ class NotificationItemWidget extends StatelessWidget {
         return Colors.purple[700]!;
       case 'exchange_new':
         return Colors.orange[700]!;
+      case 'new_message':
+        return Colors.blue[700]!;
       default:
         return Colors.grey[700]!;
     }

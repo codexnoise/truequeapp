@@ -285,7 +285,6 @@ class _ExchangeDetailBody extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.white,
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
               decoration: BoxDecoration(
                 color: Colors.white,
