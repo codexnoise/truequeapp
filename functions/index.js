@@ -387,6 +387,88 @@ exports.updateNotificationStatus = onDocumentUpdated(
   }
 );
 
+// Send push notification when a new message notification is created
+exports.sendMessageNotification = onDocumentCreated(
+  'notifications/{notificationId}',
+  async (event) => {
+    const snap = event.data;
+    const notification = snap.data();
+
+    // Only handle new_message type to avoid double-sending for exchange notifications
+    if (notification.type !== 'new_message') {
+      return null;
+    }
+
+    try {
+      const userId = notification.userId;
+      const exchangeId = notification.exchangeId;
+
+      if (!userId || !exchangeId) {
+        console.log('Missing userId or exchangeId in notification');
+        return null;
+      }
+
+      // Get receiver's FCM token
+      const userDoc = await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .get();
+
+      if (!userDoc.exists) {
+        console.log('User not found:', userId);
+        return null;
+      }
+
+      const userData = userDoc.data();
+      const fcmToken = userData.fcmToken;
+
+      if (!fcmToken) {
+        console.log('No FCM token for user:', userId);
+        return null;
+      }
+
+      console.log('Sending message notification to token:', fcmToken);
+
+      const message = {
+        token: fcmToken,
+        notification: {
+          title: notification.title || 'Nuevo mensaje',
+          body: notification.body || 'Tienes un nuevo mensaje',
+        },
+        data: {
+          userId: userId,
+          exchangeId: exchangeId,
+          type: 'new_message',
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        },
+        android: {
+          priority: 'high',
+          notification: {
+            sound: 'default',
+            channelId: 'exchange_requests',
+          },
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+            },
+          },
+        },
+      };
+
+      const response = await admin.messaging().send(message);
+      console.log('Message notification sent successfully:', response);
+
+      return response;
+    } catch (error) {
+      console.error('Error sending message notification:', error);
+      return null;
+    }
+  }
+);
+
 // Cancel pending exchanges when an item is deleted
 exports.cancelExchangesOnItemDelete = onDocumentDeleted(
   'items/{itemId}',
