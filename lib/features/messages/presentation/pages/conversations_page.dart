@@ -125,7 +125,7 @@ class _ConversationTileState extends State<_ConversationTile> {
       if (userData != null && mounted) {
         setState(() {
           _otherUserName =
-              userData['displayName'] as String? ?? 'Usuario';
+              userData['name'] as String? ?? 'Usuario';
           _loaded = true;
         });
       }

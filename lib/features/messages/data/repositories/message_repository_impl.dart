@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../../home/data/models/exchange_model.dart';
 import '../../../notifications/domain/repositories/notification_repository.dart';
 import '../../domain/repositories/message_repository.dart';
@@ -39,27 +40,53 @@ class MessageRepositoryImpl implements MessageRepository {
       text: text,
     );
 
+    // Critical: save the message — if this fails, let the error propagate
     await _firestore
         .collection('exchanges')
         .doc(exchangeId)
         .collection('messages')
         .add(message.toMap());
 
-    // Update last message info on the exchange document for conversation list
-    await _firestore.collection('exchanges').doc(exchangeId).update({
-      'lastMessage': text,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastMessageSenderId': senderId,
-    });
+    // Run metadata update and notification creation independently
+    // so a failure in one does not block the other
+    await Future.wait([
+      _updateExchangeMetadata(exchangeId, text, senderId),
+      _createMessageNotification(receiverId, exchangeId, senderId, senderName, text),
+    ]);
+  }
 
-    // Create notification for the receiver
-    await _notificationRepository.createNotification(
-      userId: receiverId,
-      exchangeId: exchangeId,
-      type: 'new_message',
-      title: 'Nuevo mensaje de $senderName',
-      body: text.length > 100 ? '${text.substring(0, 100)}...' : text,
-    );
+  Future<void> _updateExchangeMetadata(String exchangeId, String text, String senderId) async {
+    try {
+      await _firestore.collection('exchanges').doc(exchangeId).update({
+        'lastMessage': text,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastMessageSenderId': senderId,
+      });
+    } catch (e) {
+      debugPrint('Error updating exchange metadata: $e');
+    }
+  }
+
+  Future<void> _createMessageNotification(
+    String receiverId,
+    String exchangeId,
+    String senderId,
+    String senderName,
+    String text,
+  ) async {
+    try {
+      await _notificationRepository.createNotification(
+        userId: receiverId,
+        exchangeId: exchangeId,
+        type: 'new_message',
+        title: 'Nuevo mensaje de $senderName',
+        body: text.length > 100 ? '${text.substring(0, 100)}...' : text,
+        senderId: senderId,
+        senderName: senderName,
+      );
+    } catch (e) {
+      debugPrint('Error creating message notification: $e');
+    }
   }
 
   @override

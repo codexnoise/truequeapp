@@ -115,7 +115,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
     final isCancelled = data.exchange.status == 'cancelled';
     final isDonation = data.exchange.type == 'donation_request';
 
-    final senderName = data.senderUser['displayName'] as String? ?? 'Usuario';
+    final senderName = data.senderUser['name'] as String? ?? 'Usuario';
     final senderEmail = data.senderUser['email'] as String? ?? '';
 
     return Stack(
@@ -303,8 +303,8 @@ class _ExchangeDetailBody extends ConsumerWidget {
                       ? data.exchange.receiverId
                       : data.exchange.senderId;
                   final otherUserName = isSender
-                      ? (data.receiverUser['displayName'] as String? ?? 'Usuario')
-                      : (data.senderUser['displayName'] as String? ?? 'Usuario');
+                      ? (data.receiverUser['name'] as String? ?? 'Usuario')
+                      : (data.senderUser['name'] as String? ?? 'Usuario');
                   context.pushNamed(
                     'chat',
                     extra: {

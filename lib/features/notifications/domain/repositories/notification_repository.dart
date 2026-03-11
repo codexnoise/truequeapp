@@ -10,6 +10,8 @@ abstract class NotificationRepository {
     required String type,
     required String title,
     required String body,
+    String? senderId,
+    String? senderName,
   });
   Future<int> getUnreadCount(String userId);
 }

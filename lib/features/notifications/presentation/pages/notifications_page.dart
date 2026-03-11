@@ -105,7 +105,7 @@ class NotificationsPage extends ConsumerWidget {
                     final isSender = currentUserId == exchange.senderId;
                     final otherUserId = isSender ? exchange.receiverId : exchange.senderId;
                     final otherUserData = await repo.getUserById(otherUserId);
-                    final otherUserName = otherUserData?['displayName'] as String? ?? 'Usuario';
+                    final otherUserName = otherUserData?['name'] as String? ?? 'Usuario';
 
                     if (!context.mounted) return;
                     context.pushNamed(

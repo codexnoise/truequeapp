@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -131,7 +132,7 @@ class PushNotificationService {
       id: message.hashCode,
       title: message.notification?.title ?? 'TruequeApp',
       body: message.notification?.body ?? 'Tienes una nueva notificación',
-      payload: message.data.toString(),
+      payload: jsonEncode(message.data),
       notificationDetails: platformChannelSpecifics,
     );
   }
@@ -158,15 +159,20 @@ class PushNotificationService {
     final payload = notificationResponse.payload;
 
     if (payload != null) {
-      final exchangeId = _extractExchangeId(payload);
-      final isMessageNotification = payload.contains('type: new_message');
+      try {
+        final data = Map<String, dynamic>.from(jsonDecode(payload) as Map);
+        final exchangeId = data['exchangeId'] as String?;
+        final type = data['type'] as String?;
 
-      if (exchangeId != null) {
-        if (isMessageNotification) {
-          _navigateToChat(exchangeId, {});
-        } else {
-          _navigateToExchangeDetail(exchangeId);
+        if (exchangeId != null) {
+          if (type == 'new_message') {
+            _navigateToChat(exchangeId, data);
+          } else {
+            _navigateToExchangeDetail(exchangeId);
+          }
         }
+      } catch (e) {
+        debugPrint('Error parsing notification payload: $e');
       }
     }
   }
@@ -191,11 +197,6 @@ class PushNotificationService {
     );
   }
 
-  String? _extractExchangeId(String payload) {
-    final regex = RegExp(r'exchangeId:\s*([\w-]+)');
-    final match = regex.firstMatch(payload);
-    return match?.group(1);
-  }
 
   Future<void> saveUserToken(String userId) async {
     if (_fcmToken == null) return;

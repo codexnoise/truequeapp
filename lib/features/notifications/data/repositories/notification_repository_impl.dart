@@ -52,6 +52,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required String type,
     required String title,
     required String body,
+    String? senderId,
+    String? senderName,
   }) async {
     final notification = NotificationModel(
       id: '',
@@ -64,7 +66,11 @@ class NotificationRepositoryImpl implements NotificationRepository {
       createdAt: DateTime.now(),
     );
 
-    await _firestore.collection('notifications').add(notification.toMap());
+    final data = notification.toMap();
+    if (senderId != null) data['senderId'] = senderId;
+    if (senderName != null) data['senderName'] = senderName;
+
+    await _firestore.collection('notifications').add(data);
   }
 
   @override
