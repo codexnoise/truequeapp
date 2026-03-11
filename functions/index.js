@@ -439,6 +439,8 @@ exports.sendMessageNotification = onDocumentCreated(
           userId: userId,
           exchangeId: exchangeId,
           type: 'new_message',
+          senderId: notification.senderId || '',
+          senderName: notification.senderName || '',
           click_action: 'FLUTTER_NOTIFICATION_CLICK',
         },
         android: {
@@ -463,7 +465,15 @@ exports.sendMessageNotification = onDocumentCreated(
 
       return response;
     } catch (error) {
-      console.error('Error sending message notification:', error);
+      if (error.code === 'messaging/registration-token-not-registered' ||
+          error.code === 'messaging/invalid-registration-token') {
+        await admin.firestore().collection('users').doc(userId).update({
+          fcmToken: admin.firestore.FieldValue.delete(),
+        });
+        console.log('Cleaned up stale FCM token for user:', userId);
+      } else {
+        console.error('Error sending message notification:', error);
+      }
       return null;
     }
   }
