@@ -332,6 +332,57 @@ exports.updateNotificationStatus = onDocumentUpdated(
             body = `${name} ha enviado una contraoferta. Revisa los detalles de la nueva propuesta.`;
             notificationType = 'exchange_counter_offered';
             break;
+          case 'received': {
+            // For 'received', notify the RECEIVER (product owner), not the sender
+            const receiverDoc = await admin.firestore()
+              .collection('users')
+              .doc(after.receiverId)
+              .get();
+
+            if (!receiverDoc.exists) return null;
+
+            const receiverData = receiverDoc.data();
+            const receiverToken = receiverData.fcmToken;
+
+            if (!receiverToken) {
+              console.log('No FCM token for receiver:', after.receiverId);
+              return null;
+            }
+
+            const receivedMessage = {
+              token: receiverToken,
+              notification: {
+                title: '¡Producto recibido!',
+                body: 'El solicitante ha confirmado la recepción del producto. ¡Gracias por usar TruequeApp!',
+              },
+              data: {
+                userId: after.receiverId,
+                exchangeId: event.params.exchangeId,
+                type: 'exchange_received',
+                status: 'received',
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+              },
+              android: {
+                priority: 'high',
+                notification: {
+                  sound: 'default',
+                  channelId: 'exchange_requests',
+                },
+              },
+              apns: {
+                payload: {
+                  aps: {
+                    sound: 'default',
+                    badge: 1,
+                  },
+                },
+              },
+            };
+
+            await admin.messaging().send(receivedMessage);
+            console.log('Received notification sent to receiver:', after.receiverId);
+            return null;
+          }
           case 'completed':
             title = '¡Intercambio completado!';
             body = 'El intercambio ha sido marcado como completado. ¡Gracias por usar TruequeApp!';
