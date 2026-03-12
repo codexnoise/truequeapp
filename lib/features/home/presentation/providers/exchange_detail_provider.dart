@@ -127,6 +127,18 @@ class ExchangeDetailNotifier extends Notifier<ExchangeDetailState> {
     }
   }
 
+  Future<void> markAsReceived(String exchangeId) async {
+    final current = state;
+    if (current is! ExchangeDetailLoaded) return;
+    state = ExchangeDetailActionLoading(current.data);
+    try {
+      await sl<UpdateExchangeStatusUseCase>().execute(exchangeId, 'received');
+      state = const ExchangeDetailSuccess('¡Producto marcado como recibido!');
+    } catch (e) {
+      state = ExchangeDetailError(e.toString());
+    }
+  }
+
   Future<void> sendCounterOffer({
     required String originalExchangeId,
     required String senderId,

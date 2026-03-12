@@ -111,9 +111,11 @@ class _ExchangeDetailBody extends ConsumerWidget {
     final isReceiver = currentUserId == data.exchange.receiverId;
     final isPending = data.exchange.status == 'pending';
     final isAccepted = data.exchange.status == 'accepted';
+    final isReceived = data.exchange.status == 'received';
     final isClosed = data.exchange.status == 'closed';
     final isCancelled = data.exchange.status == 'cancelled';
     final isDonation = data.exchange.type == 'donation_request';
+    final isSender = currentUserId == data.exchange.senderId;
 
     final senderName = data.senderUser['name'] as String? ?? 'Usuario';
     final senderEmail = data.senderUser['email'] as String? ?? '';
@@ -125,7 +127,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _StatusBadge(status: data.exchange.status, isDonation: isDonation),
+              _StatusBadge(status: data.exchange.status, isDonation: isDonation, isReceiver: isReceiver),
               const SizedBox(height: 24),
 
               _SectionLabel(isDonation ? 'SOLICITANTE' : 'PROPUESTA DE'),
@@ -279,7 +281,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
             ),
           ),
 
-        if (isAccepted && currentUserId != null)
+        if (isAccepted && isReceiver)
           Positioned(
             bottom: 0,
             left: 0,
@@ -298,19 +300,13 @@ class _ExchangeDetailBody extends ConsumerWidget {
               ),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  final isSender = currentUserId == data.exchange.senderId;
-                  final otherUserId = isSender
-                      ? data.exchange.receiverId
-                      : data.exchange.senderId;
-                  final otherUserName = isSender
-                      ? (data.receiverUser['name'] as String? ?? 'Usuario')
-                      : (data.senderUser['name'] as String? ?? 'Usuario');
+                  final otherUserName = data.senderUser['name'] as String? ?? 'Usuario';
                   context.pushNamed(
                     'chat',
                     extra: {
                       'exchangeId': data.exchange.id,
                       'otherUserName': otherUserName,
-                      'otherUserId': otherUserId,
+                      'otherUserId': data.exchange.senderId,
                     },
                   );
                 },
@@ -331,6 +327,51 @@ class _ExchangeDetailBody extends ConsumerWidget {
             ),
           ),
 
+        if (isAccepted && isSender)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _SenderAcceptedActions(data: data, isLoading: isActionLoading),
+          ),
+
+        if (isReceived)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.teal[50],
+                  border: Border.all(color: Colors.teal[200]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isReceiver ? Icons.local_shipping_outlined : Icons.check_circle_outline,
+                      size: 20,
+                      color: Colors.teal[700],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        isReceiver
+                            ? 'El solicitante confirmó la recepción del producto. ¡Entrega completada!'
+                            : 'Has confirmado la recepción del producto.',
+                        style: TextStyle(color: Colors.teal[900], fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         if (isActionLoading)
           Container(
             color: Colors.black26,
@@ -344,6 +385,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
     return switch (status) {
       'pending' => 'Pendiente',
       'accepted' => 'Aceptado',
+      'received' => 'Recibido',
       'rejected' => 'Rechazado',
       'completed' => 'Completado',
       'counter_offered' => 'Contraoferta enviada',
@@ -740,11 +782,116 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   }
 }
 
+class _SenderAcceptedActions extends ConsumerWidget {
+  final ExchangeDetailData data;
+  final bool isLoading;
+
+  const _SenderAcceptedActions({required this.data, required this.isLoading});
+
+  void _confirmMarkReceived(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        title: const Text('Confirmar recepción'),
+        content: const Text('¿Confirmas que recibiste el producto? Esta acción no se puede deshacer y el chat se cerrará.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref
+                  .read(exchangeDetailProvider.notifier)
+                  .markAsReceived(data.exchange.id);
+            },
+            child: Text('Confirmar', style: TextStyle(color: Colors.teal[700])),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final otherUserName = data.receiverUser['name'] as String? ?? 'Usuario';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton.icon(
+            onPressed: isLoading
+                ? null
+                : () => _confirmMarkReceived(context, ref),
+            icon: const Icon(Icons.check_circle_outline, size: 20),
+            label: const Text(
+              'MARCAR COMO RECIBIDO',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal[700],
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: isLoading
+                ? null
+                : () {
+                    context.pushNamed(
+                      'chat',
+                      extra: {
+                        'exchangeId': data.exchange.id,
+                        'otherUserName': otherUserName,
+                        'otherUserId': data.exchange.receiverId,
+                      },
+                    );
+                  },
+            icon: const Icon(Icons.chat, size: 20),
+            label: const Text(
+              'ENVIAR MENSAJE',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black,
+              side: const BorderSide(color: Colors.black),
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatusBadge extends StatelessWidget {
   final String status;
   final bool isDonation;
+  final bool isReceiver;
 
-  const _StatusBadge({required this.status, required this.isDonation});
+  const _StatusBadge({required this.status, required this.isDonation, required this.isReceiver});
 
   @override
   Widget build(BuildContext context) {
@@ -754,6 +901,7 @@ class _StatusBadge extends StatelessWidget {
         isDonation ? 'SOLICITUD DE DONACIÓN PENDIENTE' : 'PROPUESTA PENDIENTE',
       ),
       'accepted' => (Colors.green[700]!, 'ACEPTADO'),
+      'received' => (Colors.teal[700]!, isReceiver ? 'ENTREGADO' : 'RECIBIDO'),
       'rejected' => (Colors.red[700]!, 'RECHAZADO'),
       'completed' => (Colors.blue[700]!, 'COMPLETADO'),
       'counter_offered' => (Colors.purple[700]!, 'CONTRAOFERTA ENVIADA'),
