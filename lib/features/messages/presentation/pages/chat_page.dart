@@ -84,6 +84,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.uid : '';
     final messagesAsync = ref.watch(messagesStreamProvider(widget.exchangeId));
+    final exchangeStatus = ref.watch(exchangeStatusProvider(widget.exchangeId));
+    final isChatClosed = exchangeStatus.when(
+      data: (status) => status == 'received',
+      loading: () => false,
+      error: (_, __) => false,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -186,11 +192,37 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ),
             ),
           ),
-          _MessageInput(
-            controller: _controller,
-            isSending: _isSending,
-            onSend: _sendMessage,
-          ),
+          if (isChatClosed)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.teal[50],
+                border: Border(top: BorderSide(color: Colors.teal[200]!)),
+              ),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: MediaQuery.of(context).padding.bottom + 12,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.lock_outline, size: 18, color: Colors.teal[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Este chat fue cerrado porque el intercambio fue completado.',
+                      style: TextStyle(color: Colors.teal[900], fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            _MessageInput(
+              controller: _controller,
+              isSending: _isSending,
+              onSend: _sendMessage,
+            ),
         ],
       ),
     );

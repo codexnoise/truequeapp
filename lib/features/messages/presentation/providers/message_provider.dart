@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -26,6 +27,15 @@ final conversationsStreamProvider =
 
   final repository = ref.watch(messageRepositoryProvider);
   return repository.getAcceptedExchanges(authState.user.uid);
+});
+
+final exchangeStatusProvider =
+    StreamProvider.autoDispose.family<String?, String>((ref, exchangeId) {
+  return FirebaseFirestore.instance
+      .collection('exchanges')
+      .doc(exchangeId)
+      .snapshots()
+      .map((doc) => doc.data()?['status'] as String?);
 });
 
 final sendMessageProvider = Provider<SendMessageActions>((ref) {

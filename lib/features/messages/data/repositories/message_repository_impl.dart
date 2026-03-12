@@ -91,12 +91,13 @@ class MessageRepositoryImpl implements MessageRepository {
 
   @override
   Stream<List<ExchangeModel>> getAcceptedExchanges(String userId) {
-    // We need exchanges where the user is either sender or receiver AND status is accepted
+    // We need exchanges where the user is either sender or receiver AND status is accepted or received
     // Firestore doesn't support OR queries on different fields, so we merge two streams
+    const statuses = ['accepted', 'received'];
     final sentStream = _firestore
         .collection('exchanges')
         .where('senderId', isEqualTo: userId)
-        .where('status', isEqualTo: 'accepted')
+        .where('status', whereIn: statuses)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => ExchangeModel.fromMap(doc.data(), doc.id))
@@ -105,7 +106,7 @@ class MessageRepositoryImpl implements MessageRepository {
     final receivedStream = _firestore
         .collection('exchanges')
         .where('receiverId', isEqualTo: userId)
-        .where('status', isEqualTo: 'accepted')
+        .where('status', whereIn: statuses)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => ExchangeModel.fromMap(doc.data(), doc.id))
