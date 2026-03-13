@@ -119,6 +119,17 @@ class _ExchangeDetailBody extends ConsumerWidget {
 
     final senderName = data.senderUser['name'] as String? ?? 'Usuario';
     final senderEmail = data.senderUser['email'] as String? ?? '';
+    final receiverName = data.receiverUser['name'] as String? ?? 'Usuario';
+    final receiverEmail = data.receiverUser['email'] as String? ?? '';
+
+    // Mostrar datos del otro usuario según el rol
+    final displayName = isSender ? receiverName : senderName;
+    final displayEmail = isSender ? receiverEmail : senderEmail;
+    final userLabel = isDonation
+        ? 'SOLICITANTE'
+        : isSender
+            ? 'PROPUESTA PARA'
+            : 'PROPUESTA DE';
 
     return Stack(
       children: [
@@ -130,9 +141,9 @@ class _ExchangeDetailBody extends ConsumerWidget {
               _StatusBadge(status: data.exchange.status, isDonation: isDonation, isReceiver: isReceiver),
               const SizedBox(height: 24),
 
-              _SectionLabel(isDonation ? 'SOLICITANTE' : 'PROPUESTA DE'),
+              _SectionLabel(userLabel),
               const SizedBox(height: 12),
-              _UserCard(name: senderName, email: senderEmail),
+              _UserCard(name: displayName, email: displayEmail),
               const SizedBox(height: 24),
 
               _SectionLabel('ARTÍCULO SOLICITADO'),

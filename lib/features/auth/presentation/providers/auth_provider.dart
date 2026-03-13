@@ -47,19 +47,16 @@ class AuthNotifier extends Notifier<AuthState> {
     return AuthInitial();
   }
 
-  void _listenToAuthState() async {
-    // 1. Check our local persistence flag first
-    final prefs = await SharedPreferences.getInstance();
-    final bool keepSession = prefs.getBool('keep_session') ?? false;
-
-    // 2. Listen to the Stream you just created in the Repository
+  void _listenToAuthState() {
     _userSubscription = sl<AuthRepository>().currentUser.listen((user) async {
+      // Read keep_session INSIDE the listener so it always has the latest value
+      final prefs = await SharedPreferences.getInstance();
+      final bool keepSession = prefs.getBool('keep_session') ?? false;
+
       if (user != null && keepSession) {
-        // Save FCM token for push notifications
-        await sl<PushNotificationService>().saveUserToken(user.uid);
-        
-        // Only authenticate if there's a user AND the checkbox was checked
         state = AuthAuthenticated(user);
+        // Save FCM token in background, don't block authentication
+        sl<PushNotificationService>().saveUserToken(user.uid);
       } else if (user != null && !keepSession) {
         // If there's a user but NO "remember me", we force sign out
         logout();
@@ -82,8 +79,8 @@ class AuthNotifier extends Notifier<AuthState> {
           await prefs.setBool('keep_session', true);
         }
 
-        // Save FCM token for push notifications
-        await sl<PushNotificationService>().saveUserToken(user.uid);
+        // Save FCM token in background, don't block navigation
+        sl<PushNotificationService>().saveUserToken(user.uid);
 
         state = AuthAuthenticated(user);
       } else {
@@ -99,9 +96,9 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await sl<RegisterUseCase>().execute(email, password, name, phoneNumber);
       if (user != null) {
-        // Save FCM token for push notifications
-        await sl<PushNotificationService>().saveUserToken(user.uid);
-        
+        // Save FCM token in background, don't block navigation
+        sl<PushNotificationService>().saveUserToken(user.uid);
+
         state = AuthAuthenticated(user);
       } else {
         state = const AuthError("Registration failed");
