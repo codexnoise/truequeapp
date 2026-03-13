@@ -50,4 +50,22 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<UserEntity?> getProfile(String uid) async {
+    try {
+      return await remoteDataSource.getProfile(uid);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateProfile(String uid, {String? name, String? phoneNumber}) async {
+    try {
+      await remoteDataSource.updateProfile(uid, name: name, phoneNumber: phoneNumber);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -138,6 +138,33 @@ class _ConversationTileState extends State<_ConversationTile> {
   Widget build(BuildContext context) {
     final isDonation = widget.exchange.type == 'donation_request';
 
+    if (!_loaded) {
+      return ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: Colors.grey[300],
+          radius: 24,
+        ),
+        title: Container(
+          height: 14,
+          width: 100,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        subtitle: Container(
+          height: 12,
+          width: 60,
+          margin: const EdgeInsets.only(top: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      );
+    }
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: CircleAvatar(
@@ -180,7 +207,6 @@ class _ConversationTileState extends State<_ConversationTile> {
         ],
       ),
       onTap: () {
-        if (!_loaded) return;
         context.pushNamed(
           'chat',
           extra: {

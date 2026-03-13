@@ -24,22 +24,27 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;
 
-    setState(() {
-      _currentIndex = index;
-    });
-
     switch (index) {
       case 0:
-        // Si ya estás en home, no hagas nada. Considera refrescar.
+        setState(() => _currentIndex = 0);
         break;
       case 1:
-        context.pushNamed('conversations');
+        setState(() => _currentIndex = index);
+        context.pushNamed('conversations').then((_) {
+          if (mounted) setState(() => _currentIndex = 0);
+        });
         break;
       case 2:
-        context.pushNamed('my-items');
+        setState(() => _currentIndex = index);
+        context.pushNamed('my-items').then((_) {
+          if (mounted) setState(() => _currentIndex = 0);
+        });
         break;
       case 3:
-        // TODO: Implementar navegación a la página de perfil
+        setState(() => _currentIndex = index);
+        context.pushNamed('profile').then((_) {
+          if (mounted) setState(() => _currentIndex = 0);
+        });
         break;
     }
   }

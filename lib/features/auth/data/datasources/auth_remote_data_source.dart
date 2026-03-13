@@ -7,6 +7,8 @@ abstract class AuthRemoteDataSource {
   Future<UserModel?> signUp(String email, String password, String name, String phoneNumber);
   Future<void> signOut();
   Stream<UserModel?> get userStream;
+  Future<UserModel?> getProfile(String uid);
+  Future<void> updateProfile(String uid, {String? name, String? phoneNumber});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -73,5 +75,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<UserModel?> getProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromMap(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      throw Exception("Get Profile Error: ${e.toString()}");
+    }
+  }
+
+  @override
+  Future<void> updateProfile(String uid, {String? name, String? phoneNumber}) async {
+    try {
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (phoneNumber != null) updates['phoneNumber'] = phoneNumber;
+
+      if (updates.isNotEmpty) {
+        await _firestore.collection('users').doc(uid).update(updates);
+      }
+
+      if (name != null) {
+        await _firebaseAuth.currentUser?.updateDisplayName(name);
+      }
+    } catch (e) {
+      throw Exception("Update Profile Error: ${e.toString()}");
+    }
   }
 }

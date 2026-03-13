@@ -19,4 +19,7 @@ abstract class AuthRepository {
   ///
   /// Emits the current [UserEntity] when a user logs in and null when they log out.
   Stream<UserEntity?> get currentUser;
+
+  Future<UserEntity?> getProfile(String uid);
+  Future<void> updateProfile(String uid, {String? name, String? phoneNumber});
 }
