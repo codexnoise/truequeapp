@@ -56,7 +56,7 @@ class ItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Trade for: ${item.desiredItem}',
+                    'Busca: ${item.desiredItem}',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

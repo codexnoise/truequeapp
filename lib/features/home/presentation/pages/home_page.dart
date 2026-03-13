@@ -136,7 +136,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: 'Search for items...',
+                    hintText: 'Buscar artículos...',
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     filled: true,
                     fillColor: Colors.white,
@@ -149,7 +149,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('CATEGORIES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
+                child: Text('CATEGORÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -159,7 +159,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   padding: const EdgeInsets.only(left: 16),
                   children: [
                     _CategoryChip(
-                      label: 'All',
+                      label: 'Todos',
                       isSelected: _selectedCategory == null,
                       onTap: () => setState(() => _selectedCategory = null),
                     ),
@@ -176,7 +176,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: CheckboxListTile(
-                  title: const Text("Show only donations"),
+                  title: const Text("Solo donaciones"),
                   value: _showOnlyFreeItems,
                   onChanged: (bool? value) {
                     setState(() {
@@ -193,13 +193,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: availableItems.when(
                   data: (items) {
                     if (items.isEmpty) {
-                      return const Center(child: Text("No items from other users are available."));
+                      return const Center(child: Text("No hay artículos disponibles de otros usuarios."));
                     }
 
                     final filteredItems = _filterItems(items);
 
                     if (filteredItems.isEmpty) {
-                      return const Center(child: Text("No items match your search."));
+                      return const Center(child: Text("Ningún artículo coincide con tu búsqueda."));
                     }
 
                     return GridView.builder(
@@ -242,10 +242,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed, // Asegura que todos los items se muestren
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.format_list_bulleted), label: 'My Items'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Mensajes'),
+          BottomNavigationBarItem(icon: Icon(Icons.format_list_bulleted), label: 'Mis Artículos'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
         ],
       ),
     );

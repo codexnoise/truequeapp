@@ -93,7 +93,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'EMAIL'),
+                decoration: const InputDecoration(labelText: 'CORREO ELECTRÓNICO'),
                 validator: (value) => value == null || !value.contains('@') ? 'Email inválido' : null,
               ),
               const SizedBox(height: 16),

@@ -48,7 +48,7 @@ class MyApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Barter App MVP',
+      title: 'TruequeApp',
       debugShowCheckedModeBanner: false,
 
       // GoRouter configuration

@@ -111,7 +111,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("NEW ITEM")),
+      appBar: AppBar(title: const Text("NUEVO ARTÍCULO")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -122,20 +122,20 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
               _buildImageGrid(),
               const SizedBox(height: 8),
               Text(
-                "${_images.length}/5 images",
+                "${_images.length}/5 imágenes",
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 32),
               _CustomTextFormField(
                 controller: _titleController,
-                label: 'TITLE',
-                hint: 'e.g. Vintage Camera',
+                label: 'TÍTULO',
+                hint: 'Ej: Cámara vintage',
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Title is required' : null,
+                    value == null || value.isEmpty ? 'El título es requerido' : null,
               ),
               _buildCategorySelector(),
               CheckboxListTile(
-                title: const Text("Mark as donation (free)"),
+                title: const Text("Marcar como donación (gratis)"),
                 value: _isFree,
                 onChanged: (bool? value) {
                   setState(() {
@@ -151,21 +151,21 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
               ),
               _CustomTextFormField(
                 controller: _lookingForController,
-                label: 'LOOKING FOR',
-                hint: _isFree ? 'This is a donation' : 'What do you want in exchange?',
+                label: 'ARTÍCULO DESEADO',
+                hint: _isFree ? 'Es una donación' : '¿Qué buscas a cambio?',
                 enabled: !_isFree,
                 validator: (value) {
                   if (_isFree) return null;
-                  return value == null || value.isEmpty ? 'This field is required' : null;
+                  return value == null || value.isEmpty ? 'Este campo es requerido' : null;
                 },
               ),
               _CustomTextFormField(
                 controller: _descController,
-                label: 'DESCRIPTION',
-                hint: 'Describe condition...',
+                label: 'DESCRIPCIÓN',
+                hint: 'Describe el estado...',
                 maxLines: 4,
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Description is required' : null,
+                    value == null || value.isEmpty ? 'La descripción es requerida' : null,
               ),
               const SizedBox(height: 40),
             ],
@@ -183,7 +183,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         crossAxisAlignment: .start,
         children: [
           const Text(
-            'CATEGORY',
+            'CATEGORÍA',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
           ),
           DropdownButton<String>(
@@ -285,7 +285,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           ),
           child: state is AddItemLoading
               ? const CircularProgressIndicator(color: Colors.white)
-              : const Text("POST ITEM"),
+              : const Text("PUBLICAR ARTÍCULO"),
         ),
       ),
     );

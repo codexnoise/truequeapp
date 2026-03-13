@@ -46,22 +46,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             crossAxisAlignment: .stretch,
             children: [
               const Text(
-                'LOGIN',
+                'INICIAR SESIÓN',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2),
                 textAlign: .center,
               ),
               const SizedBox(height: 48),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'EMAIL'),
-                validator: (value) => value!.isEmpty ? 'Field required' : null,
+                decoration: const InputDecoration(labelText: 'CORREO ELECTRÓNICO'),
+                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'PASSWORD'),
+                decoration: const InputDecoration(labelText: 'CONTRASEÑA'),
                 obscureText: true,
-                validator: (value) => value!.length < 6 ? 'Too short' : null,
+                validator: (value) => value!.length < 6 ? 'Muy corta' : null,
               ),
               const SizedBox(height: 32),
               Row(
@@ -77,7 +77,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       }
                     },
                   ),
-                  const Text('KEEP ME SIGNED IN', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+                  const Text('MANTENER SESIÓN INICIADA', style: TextStyle(fontSize: 12, letterSpacing: 1)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -94,11 +94,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       );
                     }
                   },
-                  child: const Text('SIGN IN'),
+                  child: const Text('INICIAR SESIÓN'),
                 ),
               TextButton(
                 onPressed: () => context.push('/register'),
-                child: const Text('CREATE ACCOUNT', style: TextStyle(color: Colors.black54)),
+                child: const Text('CREAR CUENTA', style: TextStyle(color: Colors.black54)),
               ),
             ],
           ),
