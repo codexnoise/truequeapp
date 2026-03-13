@@ -41,12 +41,12 @@ Future<void> init() async {
   // Repositories (Contracts implementation)
   // We register the implementation linked to the abstract contract
   sl.registerLazySingleton<AuthRepository>(
-        () => AuthRepositoryImpl(remoteDataSource: sl()),
+    () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources (External communication)
   sl.registerLazySingleton<AuthRemoteDataSource>(
-        () => AuthRemoteDataSourceImpl(sl(), sl()),
+    () => AuthRemoteDataSourceImpl(sl(), sl()),
   );
 
   // Core
@@ -64,7 +64,6 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
 }
 
-
 void setupHomeDependencies() {
   // Repository
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
@@ -80,9 +79,7 @@ void setupHomeDependencies() {
 
 void setupMessageDependencies() {
   // Repository
-  sl.registerLazySingleton<MessageRepository>(
-    () => MessageRepositoryImpl(sl(), sl()),
-  );
+  sl.registerLazySingleton<MessageRepository>(() => MessageRepositoryImpl(sl(), sl()));
 
   // UseCases
   sl.registerLazySingleton(() => SendMessageUseCase(sl()));

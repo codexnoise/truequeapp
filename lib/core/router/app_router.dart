@@ -13,6 +13,7 @@ import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
 import '../../features/messages/presentation/pages/chat_page.dart';
 import '../../features/messages/presentation/pages/conversations_page.dart';
+import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -93,6 +94,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/conversations',
         name: 'conversations',
         builder: (context, state) => const ConversationsPage(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfilePage(),
       ),
       GoRoute(
         path: '/chat',
