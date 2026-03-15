@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../domain/entities/item_entity.dart';
@@ -71,21 +72,29 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final availableItems = ref.watch(availableItemsProvider);
     final unreadCount = ref.watch(unreadCountProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: colorScheme.surfaceContainerLow,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'TRUEQUEAPP',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, letterSpacing: 2),
+          style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, letterSpacing: 2),
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+              color: colorScheme.onSurface,
+            ),
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+          ),
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_none, color: Colors.black),
+                icon: Icon(Icons.notifications_none, color: colorScheme.onSurface),
                 onPressed: () => context.pushNamed('notifications'),
               ),
               if (unreadCount.hasValue && unreadCount.value! > 0)
@@ -94,8 +103,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   top: 8,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -104,8 +113,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                     child: Text(
                       unreadCount.value! > 9 ? '9+' : '${unreadCount.value}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -116,7 +125,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+            icon: Icon(Icons.logout, color: colorScheme.onSurface),
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
@@ -137,9 +146,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   },
                   decoration: InputDecoration(
                     hintText: 'Buscar artículos...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -147,9 +156,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('CATEGORÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text('CATEGORÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2, color: colorScheme.onSurface)),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -185,7 +194,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   },
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
-                  activeColor: Colors.black,
+                  activeColor: colorScheme.primary,
                 ),
               ),
               Padding(
@@ -218,7 +227,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       },
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                  loading: () => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
                   error: (err, stack) => Center(child: Text("Error: $err")),
                 ),
               ),
@@ -228,19 +237,20 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.pushNamed('add-item'),
-        backgroundColor: Colors.black,
+        backgroundColor: colorScheme.primary,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: colorScheme.onPrimary),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurfaceVariant,
+        backgroundColor: colorScheme.surface,
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed, // Asegura que todos los items se muestren
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Inicio'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Mensajes'),
@@ -260,19 +270,21 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.white,
+          color: isSelected ? colorScheme.primary : colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.black : Colors.grey.shade300),
+          border: Border.all(color: isSelected ? colorScheme.primary : colorScheme.outlineVariant),
         ),
         child: Text(
           label,
-          style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w500),
+          style: TextStyle(color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w500),
         ),
       ),
     );

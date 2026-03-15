@@ -33,6 +33,7 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final authState = ref.watch(authProvider);
     if (authState is! AuthAuthenticated) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -40,23 +41,21 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
     final userId = authState.user.uid;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Mi Actividad',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.black38,
-          indicatorColor: Colors.black,
+          labelColor: colorScheme.onSurface,
+          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.38),
+          indicatorColor: colorScheme.onSurface,
           indicatorWeight: 2,
           labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           tabs: const [
@@ -75,8 +74,8 @@ class _MyItemsPageState extends ConsumerState<MyItemsPage>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         onPressed: () => context.pushNamed('add-item'),
         child: const Icon(Icons.add),
       ),
@@ -90,6 +89,7 @@ class _MyItemsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ref.watch(itemsStreamProvider).when(
       data: (items) {
         final myItems =
@@ -136,23 +136,23 @@ class _MyItemsTab extends ConsumerWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.check_circle,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 40,
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               'INTERCAMBIADO',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -167,7 +167,7 @@ class _MyItemsTab extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
+      loading: () => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
       error: (err, _) => Center(child: Text('Error: $err')),
     );
   }
@@ -183,6 +183,7 @@ class _ExchangesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final provider = type == _ExchangeTabType.sent
         ? sentExchangesProvider(userId)
         : receivedExchangesProvider(userId);
@@ -215,7 +216,7 @@ class _ExchangesTab extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: Colors.black)),
+      loading: () => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
       error: (err, _) => Center(child: Text('Error: $err')),
     );
   }
@@ -229,6 +230,7 @@ class _ExchangeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final (statusColor, statusLabel) = _statusInfo(exchange.status);
     final isDonation = exchange.type == 'donation_request';
 
@@ -237,8 +239,8 @@ class _ExchangeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.grey[200]!),
+          color: colorScheme.surface,
+          border: Border.all(color: colorScheme.outlineVariant),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -247,12 +249,12 @@ class _ExchangeCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 isDonation ? Icons.volunteer_activism : Icons.swap_horiz,
-                color: Colors.black54,
+                color: colorScheme.onSurface.withValues(alpha: 0.54),
                 size: 22,
               ),
             ),
@@ -268,14 +270,14 @@ class _ExchangeCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     isSent ? 'Enviada por ti' : 'Recibida',
-                    style: const TextStyle(color: Colors.black45, fontSize: 12),
+                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.45), fontSize: 12),
                   ),
                   if (exchange.message != null && exchange.message!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         exchange.message!,
-                        style: const TextStyle(color: Colors.black54, fontSize: 12),
+                        style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -290,7 +292,7 @@ class _ExchangeCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -303,7 +305,7 @@ class _ExchangeCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Icon(Icons.chevron_right, color: Colors.black26, size: 18),
+                Icon(Icons.chevron_right, color: colorScheme.onSurface.withValues(alpha: 0.26), size: 18),
               ],
             ),
           ],
@@ -340,13 +342,14 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 56, color: Colors.black12),
+            Icon(icon, size: 56, color: colorScheme.onSurface.withValues(alpha: 0.12)),
             const SizedBox(height: 16),
             Text(
               message,
@@ -356,7 +359,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: const TextStyle(color: Colors.black45, fontSize: 13),
+              style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.45), fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],

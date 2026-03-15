@@ -46,6 +46,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthError) {
@@ -56,11 +57,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -69,7 +68,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('CREAR CUENTA', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+              Text('CREAR CUENTA', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
               const SizedBox(height: 40),
               TextFormField(
                 controller: _nameController,
@@ -105,7 +104,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ),
               const SizedBox(height: 40),
               if (state is AuthLoading)
-                const Center(child: CircularProgressIndicator(color: Colors.black))
+                Center(child: CircularProgressIndicator(color: colorScheme.primary))
               else
                 ElevatedButton(
                   onPressed: () {

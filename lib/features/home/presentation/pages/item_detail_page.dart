@@ -31,14 +31,15 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Consumer(
         builder: (context, ref, child) {
+          final colorScheme = Theme.of(context).colorScheme;
           final myItemsAsync = ref.watch(myItemsProvider);
-          
+
           return StatefulBuilder(
             builder: (context, setModalState) => Container(
               padding: EdgeInsets.only(
@@ -58,16 +59,16 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                     ),
                     const SizedBox(height: 24),
                     if (!isDonation) ...[
-                      const Text(
+                      Text(
                         "¿Qué quieres ofrecer a cambio?",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 12),
                       myItemsAsync.when(
                         data: (items) {
                           // Filter out exchanged items, only show available items
                           final availableItems = items.where((item) => item.status == 'available').toList();
-                          
+
                           if (availableItems.isEmpty) {
                             return Container(
                               padding: const EdgeInsets.all(12),
@@ -76,14 +77,14 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: Colors.orange[200]!),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.info_outline, size: 18, color: Colors.orange),
-                                  SizedBox(width: 8),
+                                  const Icon(Icons.info_outline, size: 18, color: Colors.orange),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       "Debes publicar un artículo propio antes de poder hacer una oferta.",
-                                      style: TextStyle(fontSize: 13, color: Colors.black87),
+                                      style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.87)),
                                     ),
                                   ),
                                 ],
@@ -108,7 +109,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                         margin: const EdgeInsets.only(right: 12),
                                         decoration: BoxDecoration(
                                           border: Border.all(
-                                            color: isSelected ? Colors.black : Colors.transparent,
+                                            color: isSelected ? colorScheme.primary : Colors.transparent,
                                             width: 2,
                                           ),
                                           borderRadius: BorderRadius.circular(8),
@@ -138,9 +139,9 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    const Text(
+                    Text(
                       "MENSAJE",
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -169,18 +170,19 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                   if (!isDonation && _selectedOfferItem == null) {
                                     showDialog(
                                       context: context,
-                                      builder: (context) => AlertDialog(
-                                        backgroundColor: Colors.white,
-                                        surfaceTintColor: Colors.white,
-                                        title: const Text('Artículo requerido'),
-                                        content: const Text('Debes seleccionar un artículo para ofrecer a cambio.'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Entendido', style: TextStyle(color: Colors.black)),
-                                          ),
-                                        ],
-                                      ),
+                                      builder: (context) {
+                                        final dlgColorScheme = Theme.of(context).colorScheme;
+                                        return AlertDialog(
+                                          title: const Text('Artículo requerido'),
+                                          content: const Text('Debes seleccionar un artículo para ofrecer a cambio.'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: Text('Entendido', style: TextStyle(color: dlgColorScheme.onSurface)),
+                                            ),
+                                          ],
+                                        );
+                                      },
                                     );
                                     return;
                                   }
@@ -194,17 +196,17 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                                       );
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           child: isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 22,
                                   width: 22,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: colorScheme.onPrimary,
                                     strokeWidth: 2.5,
                                   ),
                                 )
@@ -224,18 +226,19 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
   }
 
   Widget _buildBottomSheet(BuildContext context, dynamic authState, bool isDonation) {
+    final colorScheme = Theme.of(context).colorScheme;
     if (authState is! AuthAuthenticated) {
       return Container(
         padding: const EdgeInsets.all(24),
         child: ElevatedButton(
           onPressed: null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: colorScheme.onPrimary)),
         ),
       );
     }
@@ -250,14 +253,14 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
         child: ElevatedButton(
           onPressed: null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          child: const SizedBox(
+          child: SizedBox(
             height: 22,
             width: 22,
-            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+            child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2.5),
           ),
         ),
       ),
@@ -266,12 +269,12 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
         child: ElevatedButton(
           onPressed: () => _showOfferDialog(authState.user.uid),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: colorScheme.onPrimary)),
         ),
       ),
       data: (existing) {
@@ -280,7 +283,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           final statusColor = existing.status == 'accepted' ? Colors.green : Colors.orange;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            color: Colors.white,
+            color: colorScheme.surface,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -288,9 +291,9 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withOpacity(0.4)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     children: [
@@ -314,8 +317,8 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                   child: ElevatedButton(
                     onPressed: null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[300],
-                      disabledBackgroundColor: Colors.grey[300],
+                      backgroundColor: colorScheme.outlineVariant,
+                      disabledBackgroundColor: colorScheme.outlineVariant,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     child: Row(
@@ -341,12 +344,12 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           child: ElevatedButton(
             onPressed: () => _showOfferDialog(authState.user.uid),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: colorScheme.primary,
               minimumSize: const Size(double.infinity, 64),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: colorScheme.onPrimary)),
           ),
         );
       },
@@ -355,6 +358,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenSize = MediaQuery.sizeOf(context);
     final isDonation = widget.item.desiredItem == 'Donation';
     final authState = ref.watch(authProvider);
@@ -364,7 +368,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          builder: (context) => Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)),
         );
       }
       if (next is ExchangeSuccess) {
@@ -384,16 +388,15 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: screenSize.height * 0.45,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background: widget.item.imageUrls.isNotEmpty 
+              background: widget.item.imageUrls.isNotEmpty
                   ? Image.network(widget.item.imageUrls.first, fit: BoxFit.cover)
-                  : Container(color: Colors.grey[200]),
+                  : Container(color: colorScheme.outlineVariant),
             ),
           ),
           SliverToBoxAdapter(
@@ -408,7 +411,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                     isDonation ? "DONACIÓN" : "BUSCA: ${widget.item.desiredItem}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isDonation ? Colors.green : Colors.black,
+                      color: isDonation ? Colors.green : colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 24),

@@ -96,6 +96,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final updateState = ref.watch(updateItemProvider);
     final deleteState = ref.watch(deleteItemProvider);
 
@@ -105,9 +106,9 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const PopScope(
+          builder: (context) => PopScope(
             canPop: false,
-            child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            child: Center(child: CircularProgressIndicator(color: colorScheme.onPrimary)),
           ),
         );
       }
@@ -133,9 +134,9 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const PopScope(
+          builder: (context) => PopScope(
             canPop: false,
-            child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            child: Center(child: CircularProgressIndicator(color: colorScheme.onPrimary)),
           ),
         );
       }
@@ -157,35 +158,37 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Editar Artículo'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.black),
+            icon: Icon(Icons.delete, color: colorScheme.onSurface),
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.white,
-                  title: const Text('Eliminar Artículo'),
-                  content: const Text('¿Estás seguro de que quieres eliminar este artículo?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        if (deleteState is! DeleteItemLoading) {
-                          ref.read(deleteItemProvider.notifier).deleteItem(widget.item);
-                        }
-                      },
-                      child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
+                builder: (context) {
+                  final dialogColorScheme = Theme.of(context).colorScheme;
+                  return AlertDialog(
+                    backgroundColor: dialogColorScheme.surface,
+                    surfaceTintColor: dialogColorScheme.surface,
+                    title: const Text('Eliminar Artículo'),
+                    content: const Text('¿Estás seguro de que quieres eliminar este artículo?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          if (deleteState is! DeleteItemLoading) {
+                            ref.read(deleteItemProvider.notifier).deleteItem(widget.item);
+                          }
+                        },
+                        child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -202,7 +205,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
               const SizedBox(height: 8),
               Text(
                 "${_existingImageUrls.length + _newImages.length}/5 imágenes",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 32),
               TextFormField(
@@ -239,7 +242,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
-                activeColor: Colors.black,
+                activeColor: colorScheme.primary,
               ),
               TextFormField(
                 controller: _desiredItemController,
@@ -264,27 +267,28 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
   }
 
   Widget _buildBottomButton(UpdateItemState state) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
         ),
         child: ElevatedButton(
           onPressed: state is UpdateItemLoading ? null : _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
           child: state is UpdateItemLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 24,
                   width: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2),
                 )
               : const Text("GUARDAR CAMBIOS"),
         ),
@@ -311,6 +315,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
   }
 
   Widget _existingImagePreview(int index, String url) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         Container(
@@ -332,10 +337,10 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
               final removedUrl = _existingImageUrls.removeAt(index);
               _removedImageUrls.add(removedUrl);
             }),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 10,
-              backgroundColor: Colors.black,
-              child: Icon(Icons.close, size: 12, color: Colors.white),
+              backgroundColor: colorScheme.primary,
+              child: Icon(Icons.close, size: 12, color: colorScheme.onPrimary),
             ),
           ),
         ),
@@ -344,6 +349,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
   }
 
   Widget _newImagePreview(int index, File file) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         Container(
@@ -362,10 +368,10 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
           top: 4,
           child: GestureDetector(
             onTap: () => setState(() => _newImages.removeAt(index)),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 10,
-              backgroundColor: Colors.black,
-              child: Icon(Icons.close, size: 12, color: Colors.white),
+              backgroundColor: colorScheme.primary,
+              child: Icon(Icons.close, size: 12, color: colorScheme.onPrimary),
             ),
           ),
         ),
@@ -374,14 +380,15 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
   }
 
   Widget _imagePlaceholder() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+      child: Icon(Icons.add_a_photo_outlined, color: colorScheme.onSurfaceVariant),
     );
   }
 }

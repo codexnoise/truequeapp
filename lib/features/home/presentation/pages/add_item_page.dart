@@ -21,14 +21,12 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   String _selectedCategory = 'general';
   bool _isFree = false;
 
-  // Controllers to manage the text fields' state
   final _titleController = TextEditingController();
   final _lookingForController = TextEditingController();
   final _descController = TextEditingController();
 
   @override
   void dispose() {
-    // Dispose controllers to free up resources
     _titleController.dispose();
     _lookingForController.dispose();
     _descController.dispose();
@@ -53,20 +51,18 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   }
 
   void _submit(String ownerId) {
-    // Trigger validation and check if the form is valid.
     if (_formKey.currentState?.validate() ?? false) {
       final newItem = ItemEntity(
-        id: '', // Firestore will generate this
-        ownerId: ownerId, // The authenticated user's ID
+        id: '',
+        ownerId: ownerId,
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
         categoryId: _selectedCategory,
-        imageUrls: [], // URLs will be populated by the provider during upload
+        imageUrls: [],
         desiredItem: _isFree ? 'Donation' : _lookingForController.text.trim(),
         status: 'available',
       );
 
-      // Call the notifier to handle the item upload logic
       ref.read(addItemProvider.notifier).uploadItem(newItem, _images);
     }
   }
@@ -74,43 +70,39 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     ref.listen<AddItemState>(addItemProvider, (previous, next) {
-      // Show loading dialog
       if (next is AddItemLoading) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const PopScope(
+          builder: (context) => PopScope(
             canPop: false,
-            child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            child: Center(child: CircularProgressIndicator(color: colorScheme.onPrimary)),
           ),
         );
       }
 
-      // Pop loading dialog and go back on success
       if (next is AddItemSuccess) {
-        Navigator.of(context).pop(); // Dismiss dialog
-        Navigator.of(context).pop(); // Go back to prev screen
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
       }
 
-      // Pop loading dialog and show error
       if (next is AddItemError) {
-        Navigator.of(context).pop(); // Dismiss dialog
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message)),
         );
       }
     });
 
-    // Extract ownerId from the authenticated state
     String? ownerId;
     if (authState is AuthAuthenticated) {
       ownerId = authState.user.uid;
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text("NUEVO ARTÍCULO")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -119,11 +111,11 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           child: Column(
             crossAxisAlignment: .start,
             children: [
-              _buildImageGrid(),
+              _buildImageGrid(colorScheme),
               const SizedBox(height: 8),
               Text(
                 "${_images.length}/5 imágenes",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 32),
               _CustomTextFormField(
@@ -147,7 +139,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
-                activeColor: Colors.black,
+                activeColor: colorScheme.primary,
               ),
               _CustomTextFormField(
                 controller: _lookingForController,
@@ -172,7 +164,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           ),
         ),
       ),
-      bottomSheet: _buildBottomButton(ref.watch(addItemProvider), ownerId),
+      bottomSheet: _buildBottomButton(ref.watch(addItemProvider), ownerId, colorScheme),
     );
   }
 
@@ -202,7 +194,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     );
   }
 
-  Widget _buildImageGrid() {
+  Widget _buildImageGrid(ColorScheme colorScheme) {
     return SizedBox(
       height: 100,
       child: ListView.builder(
@@ -212,28 +204,28 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           if (i == _images.length && _images.length < 5) {
             return GestureDetector(
               onTap: _pickImage,
-              child: _imagePlaceholder(),
+              child: _imagePlaceholder(colorScheme),
             );
           }
-          return _imagePreview(i);
+          return _imagePreview(i, colorScheme);
         },
       ),
     );
   }
 
-  Widget _imagePlaceholder() {
+  Widget _imagePlaceholder(ColorScheme colorScheme) {
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+      child: Icon(Icons.add_a_photo_outlined, color: colorScheme.onSurfaceVariant),
     );
   }
 
-  Widget _imagePreview(int index) {
+  Widget _imagePreview(int index, ColorScheme colorScheme) {
     return Stack(
       children: [
         Container(
@@ -252,10 +244,10 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           top: 4,
           child: GestureDetector(
             onTap: () => setState(() => _images.removeAt(index)),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 10,
-              backgroundColor: Colors.black,
-              child: Icon(Icons.close, size: 12, color: Colors.white),
+              backgroundColor: colorScheme.primary,
+              child: Icon(Icons.close, size: 12, color: colorScheme.onPrimary),
             ),
           ),
         ),
@@ -263,28 +255,26 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
     );
   }
 
-  Widget _buildBottomButton(AddItemState state, String? ownerId) {
+  Widget _buildBottomButton(AddItemState state, String? ownerId, ColorScheme colorScheme) {
     final bool canUpload =
         state is! AddItemLoading && ownerId != null && _images.isNotEmpty;
 
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
         ),
         child: ElevatedButton(
           onPressed: canUpload ? () => _submit(ownerId) : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 64),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
           child: state is AddItemLoading
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? CircularProgressIndicator(color: colorScheme.onPrimary)
               : const Text("PUBLICAR ARTÍCULO"),
         ),
       ),
@@ -311,6 +301,8 @@ class _CustomTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -326,15 +318,15 @@ class _CustomTextFormField extends StatelessWidget {
             enabled: enabled,
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFEEEEEE)),
+              hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.black),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.primary),
               ),
-              disabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFEEEEEE)),
+              disabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
             ),
             validator: validator,

@@ -12,23 +12,22 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final notificationsAsync = ref.watch(notificationsStreamProvider);
     final authState = ref.watch(authProvider);
     final currentUserId = authState is AuthAuthenticated ? authState.user.uid : null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Notificaciones',
           style: TextStyle(
-            color: Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -40,9 +39,9 @@ class NotificationsPage extends ConsumerWidget {
                 ref.read(notificationActionsProvider).markAllAsRead(currentUserId);
               }
             },
-            child: const Text(
+            child: Text(
               'Marcar todas',
-              style: TextStyle(color: Colors.black, fontSize: 13),
+              style: TextStyle(color: colorScheme.onSurface, fontSize: 13),
             ),
           ),
         ],
@@ -57,14 +56,14 @@ class NotificationsPage extends ConsumerWidget {
                   Icon(
                     Icons.notifications_none,
                     size: 64,
-                    color: Colors.grey[300],
+                    color: colorScheme.outlineVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No tienes notificaciones',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -74,7 +73,7 @@ class NotificationsPage extends ConsumerWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[500],
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -94,7 +93,7 @@ class NotificationsPage extends ConsumerWidget {
                         .read(notificationActionsProvider)
                         .markAsRead(notification.id);
                   }
-                  
+
                   if (!context.mounted) return;
 
                   if (notification.type == 'new_message') {
@@ -127,8 +126,8 @@ class NotificationsPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.black),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
         ),
         error: (error, stack) => Center(
           child: Column(
@@ -138,12 +137,12 @@ class NotificationsPage extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'Error al cargar notificaciones',
-                style: TextStyle(color: Colors.grey[700]),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -26,16 +26,17 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final state = ref.watch(exchangeDetailProvider);
 
     ref.listen<ExchangeDetailState>(exchangeDetailProvider, (prev, next) {
       if (next is ExchangeDetailSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message), backgroundColor: Colors.black),
+          SnackBar(content: Text(next.message), backgroundColor: colorScheme.primary),
         );
 
         Navigator.pop(context);
-        
+
         if (Navigator.canPop(context)) Navigator.pop(context);
       }
       if (next is ExchangeDetailError) {
@@ -46,26 +47,24 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Detalle del Intercambio',
           style: TextStyle(
-            color: Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
       ),
       body: switch (state) {
-        ExchangeDetailInitial() || ExchangeDetailLoading() => const Center(
-          child: CircularProgressIndicator(color: Colors.black),
+        ExchangeDetailInitial() || ExchangeDetailLoading() => Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
         ),
         ExchangeDetailLoaded(data: final data) => _ExchangeDetailBody(
           data: data,
@@ -79,9 +78,9 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.black38),
+              Icon(Icons.error_outline, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.38)),
               const SizedBox(height: 16),
-              Text(msg, style: const TextStyle(color: Colors.black54)),
+              Text(msg, style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54))),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref
@@ -106,6 +105,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final authState = ref.watch(authProvider);
     final currentUserId = authState is AuthAuthenticated ? authState.user.uid : null;
     final isReceiver = currentUserId == data.exchange.receiverId;
@@ -165,8 +165,8 @@ class _ExchangeDetailBody extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    border: Border.all(color: Colors.grey[200]!),
+                    color: colorScheme.surfaceContainerLow,
+                    border: Border.all(color: colorScheme.outlineVariant),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -208,21 +208,21 @@ class _ExchangeDetailBody extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.white,
+              color: colorScheme.surface,
               padding: const EdgeInsets.all(24),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.hourglass_top, size: 18, color: Colors.black54),
-                    SizedBox(width: 8),
+                    Icon(Icons.hourglass_top, size: 18, color: colorScheme.onSurface.withValues(alpha: 0.54)),
+                    const SizedBox(width: 8),
                     Text(
                       'Esperando respuesta del receptor',
-                      style: TextStyle(color: Colors.black54, fontSize: 14),
+                      style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 14),
                     ),
                   ],
                 ),
@@ -236,7 +236,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.white,
+              color: colorScheme.surface,
               padding: const EdgeInsets.all(24),
               child: Container(
                 padding: const EdgeInsets.all(16),
@@ -267,7 +267,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.white,
+              color: colorScheme.surface,
               padding: const EdgeInsets.all(24),
               child: Container(
                 padding: const EdgeInsets.all(16),
@@ -300,10 +300,10 @@ class _ExchangeDetailBody extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: colorScheme.shadow.withValues(alpha: 0.08),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),
@@ -327,8 +327,8 @@ class _ExchangeDetailBody extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -352,7 +352,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.white,
+              color: colorScheme.surface,
               padding: const EdgeInsets.all(24),
               child: Container(
                 padding: const EdgeInsets.all(16),
@@ -385,8 +385,8 @@ class _ExchangeDetailBody extends ConsumerWidget {
 
         if (isActionLoading)
           Container(
-            color: Colors.black26,
-            child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+            color: colorScheme.onSurface.withValues(alpha: 0.26),
+            child: Center(child: CircularProgressIndicator(color: colorScheme.onPrimary)),
           ),
       ],
     );
@@ -436,7 +436,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
     final isCounterOffer = widget.data.exchange.parentExchangeId != null;
     final senderItemId = widget.data.exchange.senderItemId;
     final receiverItemId = widget.data.exchange.receiverItemId;
-    
+
     // Validación 1: No permitir contraoferta en donaciones
     if (isDonation) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -447,7 +447,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
       );
       return;
     }
-    
+
     // Validación 2: No permitir contraoferta sobre una contraoferta (evitar bucle infinito)
     if (isCounterOffer) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -464,19 +464,20 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
       );
       return;
     }
-    
+
     final messageController = TextEditingController();
     ItemEntity? selectedItem;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Consumer(
         builder: (context, ref, _) {
+          final colorScheme = Theme.of(context).colorScheme;
           final myItemsAsync = ref.watch(myItemsProvider);
           return StatefulBuilder(
             builder: (context, setModalState) => Padding(
@@ -496,29 +497,29 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Propón un artículo diferente o ajusta las condiciones.',
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
+                      style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.54)),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'ARTÍCULO A OFRECER',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 12),
                     myItemsAsync.when(
                       data: (items) {
                         // Filtrar: solo items disponibles, excluyendo el item solicitado originalmente y el ofrecido por el solicitante
-                        final availableItems = items.where((item) => 
-                          item.status == 'available' && 
-                          item.id != receiverItemId && 
+                        final availableItems = items.where((item) =>
+                          item.status == 'available' &&
+                          item.id != receiverItemId &&
                           item.id != senderItemId
                         ).toList();
-                        
+
                         if (availableItems.isEmpty) {
                           return Container(
                             padding: const EdgeInsets.all(16),
@@ -541,7 +542,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                             ),
                           );
                         }
-                        
+
                         return SizedBox(
                           height: 110,
                           child: ListView.builder(
@@ -558,8 +559,8 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: isSelected
-                                          ? Colors.black
-                                          : Colors.grey[300]!,
+                                          ? colorScheme.primary
+                                          : colorScheme.outlineVariant,
                                       width: isSelected ? 2 : 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
@@ -569,12 +570,12 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                                             fit: BoxFit.cover,
                                           )
                                         : null,
-                                    color: Colors.grey[100],
+                                    color: colorScheme.surfaceContainerLow,
                                   ),
                                   child: item.imageUrls.isEmpty
-                                      ? const Icon(
+                                      ? Icon(
                                           Icons.image_not_supported,
-                                          color: Colors.grey,
+                                          color: colorScheme.onSurfaceVariant,
                                         )
                                       : null,
                                 ),
@@ -583,16 +584,16 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                           ),
                         );
                       },
-                      loading: () => const CircularProgressIndicator(color: Colors.black),
+                      loading: () => CircularProgressIndicator(color: colorScheme.primary),
                       error: (e, _) => Text('Error: $e'),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'MENSAJE',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -611,7 +612,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     ElevatedButton(
                       onPressed: () {
                         final msg = messageController.text.trim();
-                        
+
                         // Validación 3: Requiere un artículo diferente al del solicitante
                         if (selectedItem == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -630,7 +631,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                           );
                           return;
                         }
-                        
+
                         // Validar que no sea el mismo artículo que ofreció el solicitante
                         if (selectedItem?.id == senderItemId) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -662,7 +663,8 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                             );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         minimumSize: const Size(double.infinity, 56),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -684,38 +686,40 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   void _confirmReject() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        title: const Text('Rechazar propuesta'),
-        content: const Text('¿Estás seguro de que quieres rechazar esta propuesta?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(exchangeDetailProvider.notifier)
-                  .rejectExchange(widget.data.exchange.id);
-            },
-            child: const Text('Rechazar', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final dlgColorScheme = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: const Text('Rechazar propuesta'),
+          content: const Text('¿Estás seguro de que quieres rechazar esta propuesta?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar', style: TextStyle(color: dlgColorScheme.onSurface.withValues(alpha: 0.54))),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ref
+                    .read(exchangeDetailProvider.notifier)
+                    .rejectExchange(widget.data.exchange.id);
+              },
+              child: const Text('Rechazar', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -737,8 +741,8 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                         .acceptExchange(widget.data.exchange.id);
                   },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -752,14 +756,14 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.isLoading || 
+                  onPressed: widget.isLoading ||
                       widget.data.exchange.type == 'donation_request' ||
                       widget.data.exchange.parentExchangeId != null
-                      ? null 
+                      ? null
                       : _showCounterOfferSheet,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    side: const BorderSide(color: Colors.black),
+                    foregroundColor: colorScheme.onSurface,
+                    side: BorderSide(color: colorScheme.onSurface),
                     minimumSize: const Size(0, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
@@ -802,41 +806,43 @@ class _SenderAcceptedActions extends ConsumerWidget {
   void _confirmMarkReceived(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        title: const Text('Confirmar recepción'),
-        content: const Text('¿Confirmas que recibiste el producto? Esta acción no se puede deshacer y el chat se cerrará.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(exchangeDetailProvider.notifier)
-                  .markAsReceived(data.exchange.id);
-            },
-            child: Text('Confirmar', style: TextStyle(color: Colors.teal[700])),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final dlgColorScheme = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: const Text('Confirmar recepción'),
+          content: const Text('¿Confirmas que recibiste el producto? Esta acción no se puede deshacer y el chat se cerrará.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar', style: TextStyle(color: dlgColorScheme.onSurface.withValues(alpha: 0.54))),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ref
+                    .read(exchangeDetailProvider.notifier)
+                    .markAsReceived(data.exchange.id);
+              },
+              child: Text('Confirmar', style: TextStyle(color: Colors.teal[700])),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final otherUserName = data.receiverUser['name'] as String? ?? 'Usuario';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -883,8 +889,8 @@ class _SenderAcceptedActions extends ConsumerWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.black),
+              foregroundColor: colorScheme.onSurface,
+              side: BorderSide(color: colorScheme.onSurface),
               minimumSize: const Size(double.infinity, 52),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -924,9 +930,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -942,12 +948,13 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w900,
-        color: Colors.black54,
+        color: colorScheme.onSurface.withValues(alpha: 0.54),
         letterSpacing: 0.5,
       ),
     );
@@ -962,20 +969,21 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
             radius: 22,
             child: Text(
               name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: 16),
@@ -990,7 +998,7 @@ class _UserCard extends StatelessWidget {
                 if (email.isNotEmpty)
                   Text(
                     email,
-                    style: const TextStyle(color: Colors.black54, fontSize: 13),
+                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 13),
                   ),
               ],
             ),
@@ -1008,9 +1016,10 @@ class _ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1027,8 +1036,8 @@ class _ItemCard extends StatelessWidget {
                 : Container(
                     width: 100,
                     height: 100,
-                    color: Colors.grey[100],
-                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                    color: colorScheme.surfaceContainerLow,
+                    child: Icon(Icons.image_not_supported, color: colorScheme.onSurfaceVariant),
                   ),
           ),
           const SizedBox(width: 16),
@@ -1047,7 +1056,7 @@ class _ItemCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     item.description,
-                    style: const TextStyle(color: Colors.black54, fontSize: 13),
+                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 13),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1076,6 +1085,7 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -1085,7 +1095,7 @@ class _InfoRow extends StatelessWidget {
             width: 80,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.black54, fontSize: 13),
+              style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 13),
             ),
           ),
           Expanded(

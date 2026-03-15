@@ -80,6 +80,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final authState = ref.watch(authProvider);
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.uid : '';
@@ -92,25 +93,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.black,
+              backgroundColor: colorScheme.primary,
               radius: 16,
               child: Text(
                 widget.otherUserName.isNotEmpty
                     ? widget.otherUserName[0].toUpperCase()
                     : '?',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -120,8 +119,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             Expanded(
               child: Text(
                 widget.otherUserName,
-                style: const TextStyle(
-                  color: Colors.black,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -133,26 +132,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ),
       body: Column(
         children: [
-          Divider(height: 1, color: Colors.grey[200]),
+          Divider(height: 1, color: colorScheme.outlineVariant),
           Expanded(
             child: messagesAsync.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.chat_bubble_outline,
-                            size: 48, color: Colors.black26),
-                        SizedBox(height: 16),
+                            size: 48, color: colorScheme.onSurface.withValues(alpha: 0.26)),
+                        const SizedBox(height: 16),
                         Text(
                           'No hay mensajes aún',
-                          style: TextStyle(color: Colors.black54, fontSize: 15),
+                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 15),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           'Envía el primer mensaje para coordinar',
-                          style: TextStyle(color: Colors.black38, fontSize: 13),
+                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 13),
                         ),
                       ],
                     ),
@@ -183,8 +182,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   },
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Colors.black),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: colorScheme.primary),
               ),
               error: (e, _) => Center(
                 child: Text('Error: $e',
@@ -243,18 +242,19 @@ class _DateSeparator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: colorScheme.outlineVariant,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDate(date),
-            style: const TextStyle(fontSize: 11, color: Colors.black54),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.54)),
           ),
         ),
       ),
@@ -288,6 +288,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -296,7 +297,7 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? Colors.black : Colors.grey[100],
+          color: isMe ? colorScheme.primary : colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -310,7 +311,7 @@ class _MessageBubble extends StatelessWidget {
             Text(
               message.text,
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
+                color: isMe ? colorScheme.onPrimary : colorScheme.onSurface.withValues(alpha: 0.87),
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -322,7 +323,7 @@ class _MessageBubble extends StatelessWidget {
                   : '',
               style: TextStyle(
                 fontSize: 10,
-                color: isMe ? Colors.white60 : Colors.black38,
+                color: isMe ? colorScheme.onPrimary.withValues(alpha: 0.6) : colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           ],
@@ -345,10 +346,11 @@ class _MessageInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[200]!)),
+        color: colorScheme.surface,
+        border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
       ),
       padding: EdgeInsets.only(
         left: 16,
@@ -366,9 +368,9 @@ class _MessageInput extends StatelessWidget {
               minLines: 1,
               decoration: InputDecoration(
                 hintText: 'Escribe un mensaje...',
-                hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+                hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 14),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: colorScheme.surfaceContainerLow,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 border: OutlineInputBorder(
@@ -385,7 +387,7 @@ class _MessageInput extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Material(
-            color: Colors.black,
+            color: colorScheme.primary,
             borderRadius: BorderRadius.circular(24),
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
@@ -395,15 +397,15 @@ class _MessageInput extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 child: isSending
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.send, color: Colors.white, size: 20),
+                    : Icon(Icons.send, color: colorScheme.onPrimary, size: 20),
               ),
             ),
           ),

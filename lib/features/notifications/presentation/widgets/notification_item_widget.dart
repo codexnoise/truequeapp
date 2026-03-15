@@ -14,14 +14,15 @@ class NotificationItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: notification.isRead ? Colors.white : Colors.grey[50],
+          color: notification.isRead ? colorScheme.surface : colorScheme.surfaceContainerLow,
           border: Border(
-            bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+            bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
           ),
         ),
         child: Row(
@@ -31,7 +32,7 @@ class NotificationItemWidget extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _getIconColor().withOpacity(0.1),
+                color: _getIconColor().withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -62,8 +63,8 @@ class NotificationItemWidget extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.black,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -74,7 +75,7 @@ class NotificationItemWidget extends StatelessWidget {
                     notification.body,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[700],
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -84,7 +85,7 @@ class NotificationItemWidget extends StatelessWidget {
                     timeago.format(notification.createdAt, locale: 'es'),
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.grey[500],
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],

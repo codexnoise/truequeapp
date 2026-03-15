@@ -11,11 +11,13 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap ?? () => context.pushNamed('item-detail', extra: item),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -24,7 +26,7 @@ class ItemCard extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
                   ),
@@ -36,7 +38,7 @@ class ItemCard extends StatelessWidget {
                       : null,
                 ),
                 child: item.imageUrls.isEmpty
-                    ? const Icon(Icons.image, color: Colors.grey)
+                    ? Icon(Icons.image, color: colorScheme.onSurfaceVariant)
                     : null,
               ),
             ),
@@ -47,9 +49,10 @@ class ItemCard extends StatelessWidget {
                 children: [
                   Text(
                     item.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
+                      color: colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -57,7 +60,7 @@ class ItemCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Busca: ${item.desiredItem}',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

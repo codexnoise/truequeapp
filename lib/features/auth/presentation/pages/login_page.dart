@@ -25,18 +25,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    // Escuchar errores para mostrar SnackBar
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message), backgroundColor: Colors.black),
+          SnackBar(content: Text(next.message), backgroundColor: colorScheme.primary),
         );
       }
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -45,9 +44,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             mainAxisAlignment: .center,
             crossAxisAlignment: .stretch,
             children: [
-              const Text(
+              Text(
                 'INICIAR SESIÓN',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2, color: colorScheme.onSurface),
                 textAlign: .center,
               ),
               const SizedBox(height: 48),
@@ -67,22 +66,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Row(
                 children: [
                   Checkbox(
-                    // Watches the boolean value
                     value: ref.watch(rememberMeProvider),
-                    activeColor: Colors.black,
+                    activeColor: colorScheme.primary,
                     onChanged: (value) {
-                      // Uses the explicit method from the notifier
                       if (value != null) {
                         ref.read(rememberMeProvider.notifier).toggle(value);
                       }
                     },
                   ),
-                  const Text('MANTENER SESIÓN INICIADA', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+                  Text('MANTENER SESIÓN INICIADA', style: TextStyle(fontSize: 12, letterSpacing: 1, color: colorScheme.onSurface)),
                 ],
               ),
               const SizedBox(height: 16),
               if (state is AuthLoading)
-                const Center(child: CircularProgressIndicator(color: Colors.black))
+                Center(child: CircularProgressIndicator(color: colorScheme.primary))
               else
                 ElevatedButton(
                   onPressed: () {
@@ -98,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
               TextButton(
                 onPressed: () => context.push('/register'),
-                child: const Text('CREAR CUENTA', style: TextStyle(color: Colors.black54)),
+                child: Text('CREAR CUENTA', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54))),
               ),
             ],
           ),

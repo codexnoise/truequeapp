@@ -12,24 +12,23 @@ class ConversationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final conversationsAsync = ref.watch(conversationsStreamProvider);
     final authState = ref.watch(authProvider);
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.uid : '';
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Mensajes',
           style: TextStyle(
-            color: Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -38,27 +37,27 @@ class ConversationsPage extends ConsumerWidget {
       body: conversationsAsync.when(
         data: (exchanges) {
           if (exchanges.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.forum_outlined, size: 56, color: Colors.black26),
-                  SizedBox(height: 16),
+                  Icon(Icons.forum_outlined, size: 56, color: colorScheme.onSurface.withValues(alpha: 0.26)),
+                  const SizedBox(height: 16),
                   Text(
                     'No tienes conversaciones',
                     style: TextStyle(
-                      color: Colors.black54,
+                      color: colorScheme.onSurface.withValues(alpha: 0.54),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 48),
                     child: Text(
                       'Cuando un intercambio o donación sea aceptado, podrás chatear aquí',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black38, fontSize: 13),
+                      style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 13),
                     ),
                   ),
                 ],
@@ -70,7 +69,7 @@ class ConversationsPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: exchanges.length,
             separatorBuilder: (_, __) =>
-                Divider(height: 1, color: Colors.grey[100]),
+                Divider(height: 1, color: colorScheme.surfaceContainerLow),
             itemBuilder: (context, index) {
               final exchange = exchanges[index];
               return _ConversationTile(
@@ -80,8 +79,8 @@ class ConversationsPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.black),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
         ),
         error: (e, _) => Center(
           child: Text('Error: $e', style: const TextStyle(color: Colors.red)),
@@ -136,20 +135,21 @@ class _ConversationTileState extends State<_ConversationTile> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isDonation = widget.exchange.type == 'donation_request';
 
     if (!_loaded) {
       return ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         leading: CircleAvatar(
-          backgroundColor: Colors.grey[300],
+          backgroundColor: colorScheme.outlineVariant,
           radius: 24,
         ),
         title: Container(
           height: 14,
           width: 100,
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: colorScheme.outlineVariant,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -158,7 +158,7 @@ class _ConversationTileState extends State<_ConversationTile> {
           width: 60,
           margin: const EdgeInsets.only(top: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: colorScheme.outlineVariant,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -168,12 +168,12 @@ class _ConversationTileState extends State<_ConversationTile> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: CircleAvatar(
-        backgroundColor: Colors.black,
+        backgroundColor: colorScheme.primary,
         radius: 24,
         child: Text(
           _otherUserName.isNotEmpty ? _otherUserName[0].toUpperCase() : '?',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -185,7 +185,7 @@ class _ConversationTileState extends State<_ConversationTile> {
       ),
       subtitle: Text(
         isDonation ? 'Donación' : 'Intercambio',
-        style: const TextStyle(color: Colors.black54, fontSize: 13),
+        style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54), fontSize: 13),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -196,13 +196,13 @@ class _ConversationTileState extends State<_ConversationTile> {
           if (widget.exchange.updatedAt != null)
             Text(
               _formatTime(widget.exchange.updatedAt!),
-              style: const TextStyle(color: Colors.black38, fontSize: 11),
+              style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 11),
             ),
           const SizedBox(height: 4),
           Icon(
             isDonation ? Icons.volunteer_activism : Icons.swap_horiz,
             size: 16,
-            color: Colors.black38,
+            color: colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 
@@ -85,13 +86,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     ref.listen<ProfileState>(profileProvider, (previous, next) {
       if (next is ProfileLoaded && previous is ProfileSaving) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perfil actualizado'),
-            backgroundColor: Colors.black,
+          SnackBar(
+            content: const Text('Perfil actualizado'),
+            backgroundColor: colorScheme.primary,
           ),
         );
       }
@@ -113,31 +115,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Mi Perfil',
           style: TextStyle(
-            color: Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
       ),
-      body: _buildBody(profileState),
+      body: _buildBody(profileState, colorScheme),
     );
   }
 
-  Widget _buildBody(ProfileState state) {
+  Widget _buildBody(ProfileState state, ColorScheme colorScheme) {
     if (state is ProfileLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.black),
+      return Center(
+        child: CircularProgressIndicator(color: colorScheme.primary),
       );
     }
 
@@ -157,14 +157,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           children: [
             Center(
               child: CircleAvatar(
-                backgroundColor: Colors.black,
+                backgroundColor: colorScheme.primary,
                 radius: 40,
                 child: Text(
                   _nameController.text.isNotEmpty
                       ? _nameController.text[0].toUpperCase()
                       : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
                   ),
@@ -188,17 +188,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 labelText: 'TELÉFONO',
                 prefixIcon: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('🇪🇨', style: TextStyle(fontSize: 20)),
-                      SizedBox(width: 6),
+                      const Text('🇪🇨', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 6),
                       Text(
                         '+593',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -215,25 +215,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               decoration: InputDecoration(
                 labelText: 'EMAIL',
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: colorScheme.surfaceContainerLow,
               ),
             ),
             const SizedBox(height: 40),
             if (state is ProfileSaving)
-              const Center(
-                child: CircularProgressIndicator(color: Colors.black),
+              Center(
+                child: CircularProgressIndicator(color: colorScheme.primary),
               )
             else
               ElevatedButton(
                 onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
                 child: const Text(
                   'GUARDAR',
                   style: TextStyle(
@@ -242,6 +234,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
               ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Modo oscuro'),
+              subtitle: Text(
+                ref.watch(themeModeProvider) == ThemeMode.dark
+                    ? 'Activado'
+                    : 'Desactivado',
+              ),
+              value: ref.watch(themeModeProvider) == ThemeMode.dark,
+              activeTrackColor: colorScheme.primary,
+              onChanged: (value) {
+                ref.read(themeModeProvider.notifier).setThemeMode(
+                  value ? ThemeMode.dark : ThemeMode.light,
+                );
+              },
+            ),
           ],
         ),
       ),
