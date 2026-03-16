@@ -15,6 +15,7 @@ import '../../features/messages/presentation/pages/chat_page.dart';
 import '../../features/messages/presentation/pages/conversations_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -33,12 +34,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: navigatorKey,
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: authChangeNotifier,
 
     /// Handles automatic redirects based on the current authentication state.
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+      final bool isSplash = state.matchedLocation == '/splash';
+      if (isSplash) return null;
+
       final bool isAuthPath =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
@@ -56,6 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
