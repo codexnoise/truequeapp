@@ -45,8 +45,9 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -55,23 +56,23 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 32),
             const _AppTitle(),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'I N T E R C A M B I O S   Y\nD O N A C I O N E S',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF2D3142),
+                color: colors.onSurface,
                 letterSpacing: 2,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Lo que tú ya no usas, alguien más lo necesita.',
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: Color(0xFF757575),
+                color: colors.onSurfaceVariant,
               ),
             ),
             const Spacer(flex: 4),
@@ -79,9 +80,9 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 8),
             Text(
               'V E R S I O N  $_version',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: Color(0xFF9E9E9E),
+                color: colors.onSurfaceVariant,
                 letterSpacing: 2,
               ),
             ),
@@ -98,6 +99,8 @@ class _AppTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -106,16 +109,16 @@ class _AppTitle extends StatelessWidget {
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF2D3142),
+            color: onSurface,
             letterSpacing: 1,
           ),
         ),
-        Text(
+        const Text(
           'APP',
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFFC75B12),
+            color: Color(0xFFC75B12),
             letterSpacing: 1,
           ),
         ),
@@ -132,10 +135,10 @@ class _TruequeAppLogo extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        const Icon(
+        Icon(
           Icons.swap_horizontal_circle,
           size: 80,
-          color: Color(0xFF2D3142),
+          color: Theme.of(context).colorScheme.onSurface,
         ),
         Positioned(
           top: -2,
@@ -159,15 +162,16 @@ class _BottomIcons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final variantColor = Theme.of(context).colorScheme.onSurfaceVariant;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.inventory_2_outlined, size: 22, color: Color(0xFF9E9E9E)),
-        SizedBox(width: 24),
-        Icon(Icons.volunteer_activism_outlined,
-            size: 22, color: Color(0xFF9E9E9E)),
-        SizedBox(width: 24),
-        Icon(Icons.groups_outlined, size: 22, color: Color(0xFF9E9E9E)),
+        Icon(Icons.inventory_2_outlined, size: 22, color: variantColor),
+        const SizedBox(width: 24),
+        Icon(Icons.volunteer_activism_outlined, size: 22, color: variantColor),
+        const SizedBox(width: 24),
+        Icon(Icons.groups_outlined, size: 22, color: variantColor),
       ],
     );
   }

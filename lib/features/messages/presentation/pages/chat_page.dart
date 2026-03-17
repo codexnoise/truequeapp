@@ -69,7 +69,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al enviar mensaje: $e'),
-            backgroundColor: Colors.red[800],
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

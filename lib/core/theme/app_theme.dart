@@ -17,12 +17,15 @@ class AppTheme {
         surfaceContainerLow: const Color(0xFFF8F8F8),
         surfaceContainerHighest: const Color(0xFFE0E0E0),
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black, width: 2),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        labelStyle: TextStyle(color: Colors.black54),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
+        ),
+        labelStyle: const TextStyle(color: Colors.black54),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -30,7 +33,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(50),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -54,9 +57,12 @@ class AppTheme {
         surfaceContainerHighest: const Color(0xFF2C2C2C),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white, width: 2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 2),
         ),
         labelStyle: TextStyle(color: Colors.grey.shade400),
       ),
@@ -66,7 +72,7 @@ class AppTheme {
           foregroundColor: Colors.black,
           minimumSize: const Size.fromHeight(50),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
