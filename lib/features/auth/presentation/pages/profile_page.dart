@@ -101,7 +101,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.message),
-            backgroundColor: Colors.red,
+            backgroundColor: colorScheme.error,
           ),
         );
       }
@@ -172,20 +172,38 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ),
             const SizedBox(height: 32),
+            Text(
+              'NOMBRE Y APELLIDO',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'NOMBRE Y APELLIDO',
                 hintText: 'Ej: Juan Pérez',
               ),
               validator: _validateName,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            Text(
+              'TELÉFONO',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                labelText: 'TELÉFONO',
                 prefixIcon: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
@@ -208,12 +226,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               validator: _validatePhone,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            Text(
+              'EMAIL',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
             TextFormField(
               controller: _emailController,
               enabled: false,
               decoration: InputDecoration(
-                labelText: 'EMAIL',
                 filled: true,
                 fillColor: colorScheme.surfaceContainerLow,
               ),

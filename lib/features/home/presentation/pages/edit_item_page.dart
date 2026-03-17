@@ -208,25 +208,43 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                 style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 32),
+              Text(
+                'TÍTULO',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'TÍTULO',
-                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                  hintText: 'Ej: Cámara vintage',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'El título es requerido' : null,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              Text(
+                'DESCRIPCIÓN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'DESCRIPCIÓN',
-                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                  hintText: 'Describe el estado...',
                 ),
                 maxLines: 4,
                 validator: (value) => value == null || value.isEmpty ? 'La descripción es requerida' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               CheckboxListTile(
                 title: const Text("Es una donación (gratis)"),
                 value: _isFree,
@@ -244,12 +262,20 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                 contentPadding: EdgeInsets.zero,
                 activeColor: colorScheme.primary,
               ),
+              Text(
+                'ARTÍCULO DESEADO',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _desiredItemController,
                 enabled: !_isFree,
                 decoration: InputDecoration(
-                  labelText: 'ARTÍCULO DESEADO',
-                  labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
                   hintText: _isFree ? 'Este artículo es una donación' : '¿Qué buscas a cambio?',
                 ),
                 validator: (value) {
@@ -281,7 +307,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
           ),
           child: state is UpdateItemLoading

@@ -30,74 +30,194 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message), backgroundColor: colorScheme.primary),
+          SnackBar(content: Text(next.message), backgroundColor: colorScheme.error),
         );
       }
     });
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: .center,
-            crossAxisAlignment: .stretch,
-            children: [
-              Text(
-                'INICIAR SESIÓN',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2, color: colorScheme.onSurface),
-                textAlign: .center,
-              ),
-              const SizedBox(height: 48),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'CORREO ELECTRÓNICO'),
-                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'CONTRASEÑA'),
-                obscureText: true,
-                validator: (value) => value!.length < 6 ? 'Muy corta' : null,
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Checkbox(
-                    value: ref.watch(rememberMeProvider),
-                    activeColor: colorScheme.primary,
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref.read(rememberMeProvider.notifier).toggle(value);
-                      }
-                    },
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              children: [
+                // Card container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colorScheme.outlineVariant),
+                    color: colorScheme.surface,
                   ),
-                  Text('MANTENER SESIÓN INICIADA', style: TextStyle(fontSize: 12, letterSpacing: 1, color: colorScheme.onSurface)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (state is AuthLoading)
-                Center(child: CircularProgressIndicator(color: colorScheme.primary))
-              else
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ref.read(authProvider.notifier).login(
-                        _emailController.text.trim(),
-                        _passwordController.text.trim(),
-                        ref.read(rememberMeProvider),
-                      );
-                    }
-                  },
-                  child: const Text('INICIAR SESIÓN'),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Title
+                        Text(
+                          '¡Bienvenido a\nTRUEQUEAPP!',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            height: 1.2,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        // Subtitle
+                        Text(
+                          'Inicia sesión en tu app de intercambio y donaciones',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        // Email label
+                        Text(
+                          'CORREO ELECTRÓNICO',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            hintText: 'tu@correo.com',
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                        ),
+                        const SizedBox(height: 20),
+                        // Password label
+                        Text(
+                          'CONTRASEÑA',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _passwordController,
+                          decoration: const InputDecoration(
+                            hintText: '••••••••••',
+                          ),
+                          obscureText: true,
+                          validator: (value) => value!.length < 6 ? 'Muy corta' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        // Remember me
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: ref.watch(rememberMeProvider),
+                                activeColor: colorScheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    ref.read(rememberMeProvider.notifier).toggle(value);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Mantener sesión iniciada',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        // Login button
+                        if (state is AuthLoading)
+                          const Center(child: CircularProgressIndicator())
+                        else
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                ref.read(authProvider.notifier).login(
+                                  _emailController.text.trim(),
+                                  _passwordController.text.trim(),
+                                  ref.read(rememberMeProvider),
+                                );
+                              }
+                            },
+                            child: const Text('Iniciar Sesión'),
+                          ),
+                        const SizedBox(height: 16),
+                        // Create account link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '¿No tienes una cuenta?  ',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => context.push('/register'),
+                              child: Text(
+                                'Crear cuenta',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              TextButton(
-                onPressed: () => context.push('/register'),
-                child: Text('CREAR CUENTA', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.54))),
-              ),
-            ],
+                const SizedBox(height: 32),
+                // Footer
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 24,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'TRUEQUEAPP',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

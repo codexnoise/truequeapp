@@ -174,9 +174,14 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          const Text(
+          Text(
             'CATEGORÍA',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+              letterSpacing: 0.5,
+            ),
           ),
           DropdownButton<String>(
             value: _selectedCategory,
@@ -270,7 +275,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
           onPressed: canUpload ? () => _submit(ownerId) : null,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
           ),
           child: state is AddItemLoading
@@ -304,30 +309,26 @@ class _CustomTextFormField extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
-        crossAxisAlignment: .start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+              letterSpacing: 0.5,
+            ),
           ),
+          const SizedBox(height: 8),
           TextFormField(
             controller: controller,
             maxLines: maxLines,
             enabled: enabled,
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: colorScheme.outlineVariant),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: colorScheme.primary),
-              ),
-              disabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: colorScheme.outlineVariant),
-              ),
             ),
             validator: validator,
           ),

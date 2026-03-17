@@ -151,8 +151,6 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                         hintText: isDonation
                             ? "¿Por qué necesitas este artículo?"
                             : "Mensaje adicional (opcional)...",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        hintStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -199,7 +197,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                             backgroundColor: colorScheme.primary,
                             foregroundColor: colorScheme.onPrimary,
                             minimumSize: const Size(double.infinity, 60),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: isLoading
                               ? SizedBox(
@@ -235,7 +233,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
               style: TextStyle(color: colorScheme.onPrimary)),
@@ -255,7 +253,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: SizedBox(
             height: 22,
@@ -271,7 +269,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
               style: TextStyle(color: colorScheme.onPrimary)),
@@ -319,7 +317,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.outlineVariant,
                       disabledBackgroundColor: colorScheme.outlineVariant,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -346,7 +344,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
               minimumSize: const Size(double.infinity, 64),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(isDonation ? 'SOLICITAR ARTÍCULO' : 'HACER OFERTA',
                 style: TextStyle(color: colorScheme.onPrimary)),

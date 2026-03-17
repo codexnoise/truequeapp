@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -37,7 +38,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) return 'El teléfono es requerido';
-    // Formato Ecuador: 10 dígitos, empieza con 09
     final phoneRegex = RegExp(r'^09\d{8}$');
     if (!phoneRegex.hasMatch(value)) return 'Ingresa un número válido (ej: 0983853525)';
     return null;
@@ -51,7 +51,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(next.message), backgroundColor: colorScheme.error),
         );
       }
     });
@@ -59,52 +59,110 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        iconTheme: IconThemeData(color: colorScheme.onSurface),
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Text(
+              'TRUEQUEAPP',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('CREAR CUENTA', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-              const SizedBox(height: 40),
+              const SizedBox(height: 8),
+              // Title
+              Text(
+                'CREAR CUENTA',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // Subtitle
+              Text(
+                'Únete a nuestra comunidad de intercambio sostenible.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+
+              // Full Name
+              _buildLabel('NOMBRE Y APELLIDO'),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'NOMBRE Y APELLIDO',
-                  hintText: 'Ej: Juan Pérez',
+                  hintText: 'Tu nombre completo',
                 ),
                 validator: _validateName,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
+              // Phone
+              _buildLabel('TELÉFONO'),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'TELÉFONO',
                   hintText: '0983853525',
                 ),
                 validator: _validatePhone,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
+              // Email
+              _buildLabel('CORREO ELECTRÓNICO'),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'CORREO ELECTRÓNICO'),
+                decoration: const InputDecoration(
+                  hintText: 'tu@correo.com',
+                ),
                 validator: (value) => value == null || !value.contains('@') ? 'Email inválido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
+              // Password
+              _buildLabel('CONTRASEÑA'),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'CONTRASEÑA'),
+                decoration: const InputDecoration(
+                  hintText: '••••••••••',
+                ),
                 obscureText: true,
                 validator: (value) => value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
               ),
               const SizedBox(height: 40),
+
+              // Register button
               if (state is AuthLoading)
-                Center(child: CircularProgressIndicator(color: colorScheme.primary))
+                const Center(child: CircularProgressIndicator())
               else
                 ElevatedButton(
                   onPressed: () {
@@ -119,9 +177,72 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   },
                   child: const Text('REGISTRARSE'),
                 ),
+              const SizedBox(height: 24),
+
+              // Bottom links
+              Text(
+                '¿Ya tienes una cuenta?',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Text(
+                  'VOLVER AL LOGIN',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                    decoration: TextDecoration.underline,
+                    letterSpacing: 1,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Footer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 24,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'TRUEQUEAPP',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: colorScheme.onSurface,
+        letterSpacing: 0.5,
       ),
     );
   }

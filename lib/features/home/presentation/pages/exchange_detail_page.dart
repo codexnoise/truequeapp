@@ -41,7 +41,7 @@ class _ExchangeDetailPageState extends ConsumerState<ExchangeDetailPage> {
       }
       if (next is ExchangeDetailError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message), backgroundColor: Colors.red[800]),
+          SnackBar(content: Text(next.message), backgroundColor: colorScheme.error),
         );
       }
     });
@@ -167,7 +167,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerLow,
                     border: Border.all(color: colorScheme.outlineVariant),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     data.exchange.message!,
@@ -214,7 +214,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
@@ -243,7 +243,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   border: Border.all(color: Colors.orange[200]!),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
@@ -274,7 +274,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.red[50],
                   border: Border.all(color: Colors.red[200]!),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
@@ -331,7 +331,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                   foregroundColor: colorScheme.onPrimary,
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -359,7 +359,7 @@ class _ExchangeDetailBody extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.teal[50],
                   border: Border.all(color: Colors.teal[200]!),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
@@ -525,7 +525,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.orange[50],
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.orange[200]!),
                             ),
                             child: Row(
@@ -563,7 +563,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                                           : colorScheme.outlineVariant,
                                       width: isSelected ? 2 : 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(12),
                                     image: item.imageUrls.isNotEmpty
                                         ? DecorationImage(
                                             image: NetworkImage(item.imageUrls.first),
@@ -600,12 +600,8 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     TextField(
                       controller: messageController,
                       maxLines: 3,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Explica los términos de tu contraoferta...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        hintStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -667,7 +663,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                         foregroundColor: colorScheme.onPrimary,
                         minimumSize: const Size(double.infinity, 56),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text('ENVIAR CONTRAOFERTA'),
@@ -744,7 +740,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
               minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text(
               'ACEPTAR PROPUESTA',
@@ -765,7 +761,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     foregroundColor: colorScheme.onSurface,
                     side: BorderSide(color: colorScheme.onSurface),
                     minimumSize: const Size(0, 52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text(
                     'CONTRAOFERTA',
@@ -781,7 +777,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                     minimumSize: const Size(0, 52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text(
                     'RECHAZAR',
@@ -865,7 +861,7 @@ class _SenderAcceptedActions extends ConsumerWidget {
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 56),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -893,7 +889,7 @@ class _SenderAcceptedActions extends ConsumerWidget {
               side: BorderSide(color: colorScheme.onSurface),
               minimumSize: const Size(double.infinity, 52),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -974,7 +970,7 @@ class _UserCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -1020,7 +1016,7 @@ class _ItemCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
