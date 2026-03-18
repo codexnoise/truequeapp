@@ -24,6 +24,12 @@ class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(this.user);
 }
 
+class AuthEmailNotVerified extends AuthState {
+  final UserEntity user;
+
+  const AuthEmailNotVerified(this.user);
+}
+
 class AuthError extends AuthState {
   final String message;
 
@@ -54,9 +60,13 @@ class AuthNotifier extends Notifier<AuthState> {
       final bool keepSession = prefs.getBool('keep_session') ?? false;
 
       if (user != null && keepSession) {
-        state = AuthAuthenticated(user);
-        // Save FCM token in background, don't block authentication
-        sl<PushNotificationService>().saveUserToken(user.uid);
+        if (!sl<AuthRepository>().isEmailVerified) {
+          state = AuthEmailNotVerified(user);
+        } else {
+          state = AuthAuthenticated(user);
+          // Save FCM token in background, don't block authentication
+          sl<PushNotificationService>().saveUserToken(user.uid);
+        }
       } else if (user != null && !keepSession) {
         // If there's a user but NO "remember me", we force sign out
         logout();
@@ -70,7 +80,6 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> login(String email, String password, bool rememberMe) async {
     state = AuthLoading();
     try {
-      // We get the UseCase from our Service Locator (GetIt)
       final user = await sl<LoginUseCase>().execute(email, password);
 
       if (user != null) {
@@ -79,10 +88,13 @@ class AuthNotifier extends Notifier<AuthState> {
           await prefs.setBool('keep_session', true);
         }
 
-        // Save FCM token in background, don't block navigation
-        sl<PushNotificationService>().saveUserToken(user.uid);
-
-        state = AuthAuthenticated(user);
+        if (!sl<AuthRepository>().isEmailVerified) {
+          state = AuthEmailNotVerified(user);
+        } else {
+          // Save FCM token in background, don't block navigation
+          sl<PushNotificationService>().saveUserToken(user.uid);
+          state = AuthAuthenticated(user);
+        }
       } else {
         state = const AuthError("Invalid credentials");
       }
@@ -96,13 +108,36 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await sl<RegisterUseCase>().execute(email, password, name, phoneNumber);
       if (user != null) {
-        // Save FCM token in background, don't block navigation
-        sl<PushNotificationService>().saveUserToken(user.uid);
-
-        state = AuthAuthenticated(user);
+        // Email verification is sent during signUp in the data source
+        state = AuthEmailNotVerified(user);
       } else {
         state = const AuthError("Registration failed");
       }
+    } catch (e) {
+      state = AuthError(e.toString());
+    }
+  }
+
+  Future<bool> checkEmailVerification() async {
+    try {
+      final verified = await sl<AuthRepository>().checkEmailVerified();
+      if (verified) {
+        final currentState = state;
+        if (currentState is AuthEmailNotVerified) {
+          sl<PushNotificationService>().saveUserToken(currentState.user.uid);
+          state = AuthAuthenticated(currentState.user);
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> resendVerificationEmail() async {
+    try {
+      await sl<AuthRepository>().sendVerificationEmail();
     } catch (e) {
       state = AuthError(e.toString());
     }

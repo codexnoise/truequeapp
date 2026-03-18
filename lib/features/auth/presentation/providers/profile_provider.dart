@@ -56,6 +56,10 @@ class ProfileNotifier extends Notifier<ProfileState> {
       state = ProfileError(e.toString());
     }
   }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    await sl<AuthRepository>().changePassword(currentPassword, newPassword);
+  }
 }
 
 final profileProvider = NotifierProvider<ProfileNotifier, ProfileState>(() {

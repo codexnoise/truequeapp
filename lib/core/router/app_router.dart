@@ -15,6 +15,8 @@ import '../../features/messages/presentation/pages/chat_page.dart';
 import '../../features/messages/presentation/pages/conversations_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/auth/presentation/pages/recovery_page.dart';
+import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -45,16 +47,21 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final bool isAuthPath =
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/recovery';
+
+      final bool isVerifyPath = state.matchedLocation == '/verify-email';
+
+      if (authState is AuthEmailNotVerified) {
+        return isVerifyPath ? null : '/verify-email';
+      }
 
       if (authState is AuthAuthenticated) {
-        // Redirect to home if user is already authenticated
-        return isAuthPath ? '/home' : null;
+        return (isAuthPath || isVerifyPath) ? '/home' : null;
       }
 
       if (authState is! AuthLoading) {
-        // Redirect to login if user is not authenticated and not on an auth path
-        return isAuthPath ? null : '/login';
+        return (isAuthPath ? null : '/login');
       }
 
       return null;
@@ -65,6 +72,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/recovery',
+        builder: (context, state) => const RecoveryPage(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const EmailVerificationPage(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
       GoRoute(

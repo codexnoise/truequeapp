@@ -68,4 +68,52 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    try {
+      await remoteDataSource.changePassword(currentPassword, newPassword);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await remoteDataSource.sendPasswordResetEmail(email);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String?> findEmailByPhone(String phoneNumber) async {
+    try {
+      return await remoteDataSource.findEmailByPhone(phoneNumber);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  bool get isEmailVerified => remoteDataSource.isEmailVerified;
+
+  @override
+  Future<void> sendVerificationEmail() async {
+    try {
+      await remoteDataSource.sendVerificationEmail();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> checkEmailVerified() async {
+    try {
+      return await remoteDataSource.checkEmailVerified();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

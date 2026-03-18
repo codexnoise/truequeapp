@@ -147,6 +147,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: () => context.push('/recovery'),
+                            child: Text(
+                              '¿Olvidaste tus datos?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         // Login button
                         if (state is AuthLoading)

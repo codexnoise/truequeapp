@@ -22,4 +22,10 @@ abstract class AuthRepository {
 
   Future<UserEntity?> getProfile(String uid);
   Future<void> updateProfile(String uid, {String? name, String? phoneNumber});
+  Future<void> changePassword(String currentPassword, String newPassword);
+  Future<void> sendPasswordResetEmail(String email);
+  Future<String?> findEmailByPhone(String phoneNumber);
+  Future<void> sendVerificationEmail();
+  Future<bool> checkEmailVerified();
+  bool get isEmailVerified;
 }

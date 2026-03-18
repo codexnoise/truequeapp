@@ -156,7 +156,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   hintText: '••••••••••',
                 ),
                 obscureText: true,
-                validator: (value) => value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'La contraseña es requerida';
+                  if (value.length < 8) return 'Mínimo 8 caracteres';
+                  return null;
+                },
               ),
               const SizedBox(height: 40),
 

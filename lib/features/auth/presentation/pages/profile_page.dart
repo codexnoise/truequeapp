@@ -83,6 +83,165 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
+  void _showChangePasswordDialog(ColorScheme colorScheme) {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final dialogFormKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        var isLoading = false;
+        var obscureCurrent = true;
+        var obscureNew = true;
+        var obscureConfirm = true;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text(
+                'Cambiar contraseña',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              content: Form(
+                key: dialogFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: currentPasswordController,
+                      obscureText: obscureCurrent,
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña actual',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureCurrent
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () =>
+                              setDialogState(() => obscureCurrent = !obscureCurrent),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Ingresa tu contraseña actual';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: newPasswordController,
+                      obscureText: obscureNew,
+                      decoration: InputDecoration(
+                        labelText: 'Nueva contraseña',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureNew
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () =>
+                              setDialogState(() => obscureNew = !obscureNew),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Ingresa la nueva contraseña';
+                        }
+                        if (value.length < 8) {
+                          return 'Mínimo 8 caracteres';
+                        }
+                        if (value == currentPasswordController.text) {
+                          return 'La nueva contraseña debe ser diferente a la actual';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: confirmPasswordController,
+                      obscureText: obscureConfirm,
+                      decoration: InputDecoration(
+                        labelText: 'Confirmar contraseña',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureConfirm
+                              ? Icons.visibility_off
+                              : Icons.visibility),
+                          onPressed: () =>
+                              setDialogState(() => obscureConfirm = !obscureConfirm),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value != newPasswordController.text) {
+                          return 'Las contraseñas no coinciden';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (!dialogFormKey.currentState!.validate()) return;
+                          setDialogState(() => isLoading = true);
+                          try {
+                            await ref
+                                .read(profileProvider.notifier)
+                                .changePassword(
+                                  currentPasswordController.text,
+                                  newPasswordController.text,
+                                );
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Contraseña actualizada'),
+                                  backgroundColor: colorScheme.primary,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setDialogState(() => isLoading = false);
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    e.toString().replaceFirst('Exception: ', ''),
+                                  ),
+                                  backgroundColor: colorScheme.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.onPrimary,
+                          ),
+                        )
+                      : const Text('Cambiar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
@@ -278,6 +437,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   value ? ThemeMode.dark : ThemeMode.light,
                 );
               },
+            ),
+            ListTile(
+              leading: Icon(Icons.lock_outline, color: colorScheme.onSurface),
+              title: const Text('Cambiar contraseña'),
+              trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface),
+              onTap: () => _showChangePasswordDialog(colorScheme),
             ),
           ],
         ),
