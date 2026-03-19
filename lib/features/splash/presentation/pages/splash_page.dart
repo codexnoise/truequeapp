@@ -135,7 +135,7 @@ class _TruequeAppLogo extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Image.asset(
       isDark ? 'assets/logo/logo_truequeapp_dark.png' : 'assets/logo/logo_truequeapp_light.png',
-      height: 120,
+      height: 125,
     );
   }
 }
