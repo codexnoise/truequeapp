@@ -132,27 +132,10 @@ class _TruequeAppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(
-          Icons.swap_horizontal_circle,
-          size: 80,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        Positioned(
-          top: -2,
-          right: -4,
-          child: Container(
-            width: 14,
-            height: 14,
-            decoration: const BoxDecoration(
-              color: Color(0xFFC75B12),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Image.asset(
+      isDark ? 'assets/logo/logo_truequeapp_dark.png' : 'assets/logo/logo_truequeapp_light.png',
+      height: 120,
     );
   }
 }

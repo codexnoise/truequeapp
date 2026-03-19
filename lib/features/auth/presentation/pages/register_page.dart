@@ -213,10 +213,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.people_outline,
-                    size: 24,
-                    color: colorScheme.onSurfaceVariant,
+                  Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'assets/logo/logo_truequeapp_dark.png'
+                        : 'assets/logo/logo_truequeapp_light.png',
+                    height: 24,
                   ),
                   const SizedBox(width: 8),
                   Text(
