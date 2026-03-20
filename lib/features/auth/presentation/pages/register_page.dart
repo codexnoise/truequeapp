@@ -16,6 +16,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -162,7 +163,52 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   return null;
                 },
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+
+              // Terms and conditions checkbox
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _acceptedTerms,
+                      activeColor: colorScheme.primary,
+                      onChanged: (value) {
+                        setState(() => _acceptedTerms = value ?? false);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/terms'),
+                      child: Text.rich(
+                        TextSpan(
+                          text: 'He leído y acepto los ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Términos y Condiciones',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
               // Register button
               if (state is AuthLoading)
@@ -170,6 +216,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               else
                 ElevatedButton(
                   onPressed: () {
+                    if (!_acceptedTerms) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Debes aceptar los Términos y Condiciones',
+                          ),
+                          backgroundColor: colorScheme.error,
+                        ),
+                      );
+                      return;
+                    }
                     if (_formKey.currentState!.validate()) {
                       ref.read(authProvider.notifier).register(
                         _emailController.text.trim(),
@@ -213,10 +270,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.people_outline,
-                    size: 24,
-                    color: colorScheme.onSurfaceVariant,
+                  Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'assets/logo/logo_truequeapp_dark.png'
+                        : 'assets/logo/logo_truequeapp_light.png',
+                    height: 24,
                   ),
                   const SizedBox(width: 8),
                   Text(

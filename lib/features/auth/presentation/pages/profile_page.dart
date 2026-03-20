@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
@@ -443,6 +444,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: const Text('Cambiar contraseña'),
               trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface),
               onTap: () => _showChangePasswordDialog(colorScheme),
+            ),
+            ListTile(
+              leading: Icon(Icons.description_outlined, color: colorScheme.onSurface),
+              title: const Text('Términos y Condiciones'),
+              trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface),
+              onTap: () => context.push('/terms'),
             ),
           ],
         ),

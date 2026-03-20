@@ -17,6 +17,7 @@ import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/auth/presentation/pages/recovery_page.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
+import '../../features/legal/presentation/pages/terms_and_conditions_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -48,7 +49,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final bool isAuthPath =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
-          state.matchedLocation == '/recovery';
+          state.matchedLocation == '/recovery' ||
+          state.matchedLocation == '/terms';
 
       final bool isVerifyPath = state.matchedLocation == '/verify-email';
 
@@ -142,6 +144,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             otherUserId: data['otherUserId'] as String,
           );
         },
+      ),
+      GoRoute(
+        path: '/terms',
+        name: 'terms',
+        builder: (context, state) => const TermsAndConditionsPage(),
       ),
     ],
   );
