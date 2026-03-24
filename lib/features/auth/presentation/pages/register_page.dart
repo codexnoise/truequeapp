@@ -54,6 +54,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.message), backgroundColor: colorScheme.error),
         );
+      } else if (next is AuthEmailNotVerified && previous is AuthLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cuenta creada. Revisa tu correo para verificar.'),
+            backgroundColor: colorScheme.primary,
+          ),
+        );
       }
     });
 
