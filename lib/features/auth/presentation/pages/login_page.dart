@@ -14,6 +14,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController(text: '');
   final _passwordController = TextEditingController(text: 'mortadela1');
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -36,7 +37,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     return Scaffold(
-      body: SafeArea(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -92,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         TextFormField(
                           controller: _emailController,
                           decoration: const InputDecoration(
-                            hintText: 'tu@correo.com',
+                            hintText: 'Ej. tu@correo.com',
                           ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
@@ -111,10 +114,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _passwordController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: '••••••••••',
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
                           ),
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           validator: (value) => value!.length < 6 ? 'Muy corta' : null,
                         ),
                         const SizedBox(height: 16),
@@ -236,6 +243,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

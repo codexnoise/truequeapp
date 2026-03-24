@@ -130,7 +130,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ],
         ),
       ),
-      body: Column(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Column(
         children: [
           Divider(height: 1, color: colorScheme.outlineVariant),
           Expanded(
@@ -223,6 +225,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               onSend: _sendMessage,
             ),
         ],
+      ),
       ),
     );
   }

@@ -60,7 +60,8 @@ class AuthNotifier extends Notifier<AuthState> {
       final bool keepSession = prefs.getBool('keep_session') ?? false;
 
       if (user != null && keepSession) {
-        if (!sl<AuthRepository>().isEmailVerified) {
+        final verified = await sl<AuthRepository>().checkEmailVerified();
+        if (!verified) {
           state = AuthEmailNotVerified(user);
         } else {
           state = AuthAuthenticated(user);
@@ -88,7 +89,8 @@ class AuthNotifier extends Notifier<AuthState> {
           await prefs.setBool('keep_session', true);
         }
 
-        if (!sl<AuthRepository>().isEmailVerified) {
+        final verified = await sl<AuthRepository>().checkEmailVerified();
+        if (!verified) {
           state = AuthEmailNotVerified(user);
         } else {
           // Save FCM token in background, don't block navigation

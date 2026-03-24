@@ -480,7 +480,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
           final colorScheme = Theme.of(context).colorScheme;
           final myItemsAsync = ref.watch(myItemsProvider);
           return StatefulBuilder(
-            builder: (context, setModalState) => Padding(
+            builder: (context, setModalState) => GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
                 top: 24,
@@ -672,6 +674,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
                   ],
                 ),
               ),
+            ),
             ),
           );
         },
