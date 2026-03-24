@@ -8,6 +8,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
+import 'core/widgets/connectivity_banner.dart';
 import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -56,6 +57,11 @@ class MyApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
+      builder: (context, child) {
+        return ConnectivityBanner(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

@@ -19,6 +19,7 @@ import '../../features/messages/domain/repositories/message_repository.dart';
 import '../../features/messages/domain/usecases/send_message_usecase.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../services/connectivity_service.dart';
 import '../services/storage_service.dart';
 import '../services/push_notification_service.dart';
 
@@ -50,6 +51,7 @@ Future<void> init() async {
   );
 
   // Core
+  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityServiceImpl());
   sl.registerLazySingleton(() => StorageService());
 
   sl.registerSingletonAsync<PushNotificationService>(() async {
