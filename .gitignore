@@ -1,5 +1,6 @@
 # Miscellaneous
 *.class
+key.properties
 *.log
 *.pyc
 *.swp
