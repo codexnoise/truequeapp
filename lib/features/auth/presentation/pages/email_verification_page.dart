@@ -67,19 +67,31 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
 
   Future<void> _resendEmail() async {
     setState(() => _isResending = true);
-    await ref.read(authProvider.notifier).resendVerificationEmail();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Correo de verificación reenviado'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
-      setState(() {
-        _isResending = false;
-        _pollingExpired = false;
-      });
-      _startPolling();
+    try {
+      await ref.read(authProvider.notifier).resendVerificationEmail();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Correo de verificación reenviado'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        setState(() {
+          _isResending = false;
+          _pollingExpired = false;
+        });
+        _startPolling();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Error al reenviar el correo. Intenta de nuevo.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        setState(() => _isResending = false);
+      }
     }
   }
 

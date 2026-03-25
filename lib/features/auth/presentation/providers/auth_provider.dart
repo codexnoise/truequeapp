@@ -106,14 +106,21 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> register(String email, String password, String name, String phoneNumber) async {
     state = AuthLoading();
     try {
+      // Set keep_session BEFORE the Firebase call to prevent the auth stream
+      // listener from calling logout() when it detects the new user.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('keep_session', true);
+
       final user = await sl<RegisterUseCase>().execute(email, password, name, phoneNumber);
       if (user != null) {
-        // Email verification is sent during signUp in the data source
         state = AuthEmailNotVerified(user);
       } else {
+        await prefs.remove('keep_session');
         state = const AuthError("Registration failed");
       }
     } catch (e) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('keep_session');
       state = AuthError(e.toString());
     }
   }
@@ -136,11 +143,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> resendVerificationEmail() async {
-    try {
-      await sl<AuthRepository>().sendVerificationEmail();
-    } catch (e) {
-      state = AuthError(e.toString());
-    }
+    // Don't catch here — setting AuthError triggers a redirect to /login.
+    // Let the caller handle errors in the UI.
+    await sl<AuthRepository>().sendVerificationEmail();
   }
 
   void logout() async {
