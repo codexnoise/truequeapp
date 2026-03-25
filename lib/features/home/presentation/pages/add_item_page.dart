@@ -104,7 +104,9 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("NUEVO ARTÍCULO")),
-      body: SingleChildScrollView(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -121,7 +123,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
               _CustomTextFormField(
                 controller: _titleController,
                 label: 'TÍTULO',
-                hint: 'Ej: Cámara vintage',
+                hint: 'Ej. Camara vintage',
                 validator: (value) =>
                     value == null || value.isEmpty ? 'El título es requerido' : null,
               ),
@@ -163,6 +165,7 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
             ],
           ),
         ),
+      ),
       ),
       bottomSheet: _buildBottomButton(ref.watch(addItemProvider), ownerId, colorScheme),
     );
@@ -294,6 +297,7 @@ class _CustomTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
   final bool enabled;
+  final TextCapitalization textCapitalization;
 
   const _CustomTextFormField({
     required this.label,
@@ -302,6 +306,7 @@ class _CustomTextFormField extends StatelessWidget {
     this.validator,
     this.maxLines = 1,
     this.enabled = true,
+    this.textCapitalization = TextCapitalization.sentences,
   });
 
   @override
@@ -327,6 +332,7 @@ class _CustomTextFormField extends StatelessWidget {
             controller: controller,
             maxLines: maxLines,
             enabled: enabled,
+            textCapitalization: textCapitalization,
             decoration: InputDecoration(
               hintText: hint,
             ),

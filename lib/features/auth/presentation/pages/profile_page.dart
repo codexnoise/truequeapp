@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme_provider.dart';
@@ -308,7 +309,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
-    return SingleChildScrollView(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
@@ -344,8 +347,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
+              keyboardType: TextInputType.name,
+              textCapitalization: TextCapitalization.words,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+              ],
               decoration: const InputDecoration(
-                hintText: 'Ej: Juan Pérez',
+                hintText: 'Ej. Juan Perez',
               ),
               validator: _validateName,
             ),
@@ -363,6 +371,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(9),
+              ],
               decoration: InputDecoration(
                 prefixIcon: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -382,7 +394,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ],
                   ),
                 ),
-                hintText: '983853525',
+                hintText: 'Ej. 983853525',
               ),
               validator: _validatePhone,
             ),
@@ -454,6 +466,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -44,13 +44,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final bool isSplash = state.matchedLocation == '/splash';
-      if (isSplash) return null;
+      final bool isTerms = state.matchedLocation == '/terms';
+      if (isSplash || isTerms) return null;
 
       final bool isAuthPath =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
-          state.matchedLocation == '/recovery' ||
-          state.matchedLocation == '/terms';
+          state.matchedLocation == '/recovery';
 
       final bool isVerifyPath = state.matchedLocation == '/verify-email';
 

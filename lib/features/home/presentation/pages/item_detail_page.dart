@@ -41,7 +41,9 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
           final myItemsAsync = ref.watch(myItemsProvider);
 
           return StatefulBuilder(
-            builder: (context, setModalState) => Container(
+            builder: (context, setModalState) => GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
                 top: 24,
@@ -216,6 +218,7 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                   ],
                 ),
               ),
+            ),
             ),
           );
         },

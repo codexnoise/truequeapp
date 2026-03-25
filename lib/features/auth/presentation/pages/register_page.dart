@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
@@ -17,6 +18,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _acceptedTerms = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -87,7 +89,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Form(
           key: _formKey,
@@ -122,8 +126,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
+                keyboardType: TextInputType.name,
+                textCapitalization: TextCapitalization.words,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]')),
+                ],
                 decoration: const InputDecoration(
-                  hintText: 'Tu nombre completo',
+                  hintText: 'Ej. Juan Perez',
                 ),
                 validator: _validateName,
               ),
@@ -135,8 +144,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
                 decoration: const InputDecoration(
-                  hintText: '0983853525',
+                  hintText: 'Ej. 0987654321',
                 ),
                 validator: _validatePhone,
               ),
@@ -149,7 +162,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  hintText: 'tu@correo.com',
+                  hintText: 'Ej. tu@correo.com',
                 ),
                 validator: (value) => value == null || !value.contains('@') ? 'Email inválido' : null,
               ),
@@ -160,10 +173,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '••••••••••',
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'La contraseña es requerida';
                   if (value.length < 8) return 'Mínimo 8 caracteres';
@@ -299,6 +316,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/recovery_provider.dart';
 
@@ -89,7 +90,9 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
   }
 
   Widget _buildPasswordTab(ColorScheme colorScheme, RecoveryState state) {
-    return SingleChildScrollView(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
         key: _emailFormKey,
@@ -119,7 +122,7 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                hintText: 'tu@correo.com',
+                hintText: 'Ej. tu@correo.com',
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return 'El correo es requerido';
@@ -146,11 +149,14 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
           ],
         ),
       ),
+    ),
     );
   }
 
   Widget _buildEmailTab(ColorScheme colorScheme, RecoveryState state) {
-    return SingleChildScrollView(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
         key: _phoneFormKey,
@@ -179,6 +185,10 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(9),
+              ],
               decoration: InputDecoration(
                 prefixIcon: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -198,7 +208,7 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
                     ],
                   ),
                 ),
-                hintText: '983853525',
+                hintText: 'Ej. 983853525',
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return 'El teléfono es requerido';
@@ -229,6 +239,7 @@ class _RecoveryPageState extends ConsumerState<RecoveryPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

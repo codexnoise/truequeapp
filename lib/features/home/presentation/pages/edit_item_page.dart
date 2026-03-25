@@ -194,7 +194,9 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
@@ -220,8 +222,9 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  hintText: 'Ej: Cámara vintage',
+                  hintText: 'Ej. Camara vintage',
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'El título es requerido' : null,
               ),
@@ -238,6 +241,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   hintText: 'Describe el estado...',
                 ),
@@ -274,6 +278,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _desiredItemController,
+                textCapitalization: TextCapitalization.sentences,
                 enabled: !_isFree,
                 decoration: InputDecoration(
                   hintText: _isFree ? 'Este artículo es una donación' : '¿Qué buscas a cambio?',
@@ -287,6 +292,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
             ],
           ),
         ),
+      ),
       ),
       bottomSheet: _buildBottomButton(updateState),
     );
