@@ -5,6 +5,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/exchange_detail_provider.dart';
 import '../providers/home_provider.dart';
+import '../widgets/fullscreen_image_viewer.dart';
 
 class ExchangeDetailPage extends ConsumerStatefulWidget {
   final String exchangeId;
@@ -1023,21 +1024,47 @@ class _ItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
-            child: item.imageUrls.isNotEmpty
-                ? Image.network(
-                    item.imageUrls.first,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 100,
-                    height: 100,
-                    color: colorScheme.surfaceContainerLow,
-                    child: Icon(Icons.image_not_supported, color: colorScheme.onSurfaceVariant),
-                  ),
+          GestureDetector(
+            onTap: item.imageUrls.isNotEmpty
+                ? () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FullscreenImageViewer(imageUrls: item.imageUrls),
+                      ),
+                    )
+                : null,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
+              child: item.imageUrls.isNotEmpty
+                  ? Stack(
+                      children: [
+                        Image.network(
+                          item.imageUrls.first,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          right: 4,
+                          bottom: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      width: 100,
+                      height: 100,
+                      color: colorScheme.surfaceContainerLow,
+                      child: Icon(Icons.image_not_supported, color: colorScheme.onSurfaceVariant),
+                    ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
