@@ -4,6 +4,8 @@ import 'dart:io';
 abstract class ConnectivityService {
   Stream<bool> get onConnectivityChanged;
   Future<bool> checkConnectivity();
+  void pause();
+  void resume();
   void dispose();
 }
 
@@ -44,6 +46,19 @@ class ConnectivityServiceImpl implements ConnectivityService {
       }
       return false;
     }
+  }
+
+  @override
+  void pause() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  @override
+  void resume() {
+    if (_timer != null) return;
+    checkConnectivity();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) => checkConnectivity());
   }
 
   @override

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../di/injection_container.dart';
 import '../providers/connectivity_provider.dart';
+import '../services/connectivity_service.dart';
 
 class ConnectivityBanner extends ConsumerStatefulWidget {
   final Widget child;
@@ -12,8 +14,32 @@ class ConnectivityBanner extends ConsumerStatefulWidget {
   ConsumerState<ConnectivityBanner> createState() => _ConnectivityBannerState();
 }
 
-class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner> {
+class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
+    with WidgetsBindingObserver {
   bool _isRetrying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final service = sl<ConnectivityService>();
+    if (state == AppLifecycleState.resumed) {
+      service.resume();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      service.pause();
+    }
+  }
 
   Future<void> _retry() async {
     setState(() => _isRetrying = true);
