@@ -1,4 +1,5 @@
 const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
@@ -650,5 +651,203 @@ exports.cancelExchangesOnItemDelete = onDocumentDeleted(
       console.error('Error cancelling exchanges on item delete:', error);
       return null;
     }
+  }
+);
+
+// Delete user account and all associated data
+exports.deleteUserAccount = onCall(
+  { timeoutSeconds: 120 },
+  async (request) => {
+    // 1. Validate authentication
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Debes iniciar sesión para eliminar tu cuenta.');
+    }
+
+    const uid = request.auth.uid;
+    const db = admin.firestore();
+
+    console.log(`Starting account deletion for user: ${uid}`);
+
+    // 2. Check for active exchanges (accepted or received)
+    const [activeAsSender, activeAsReceiver] = await Promise.all([
+      db.collection('exchanges')
+        .where('senderId', '==', uid)
+        .where('status', 'in', ['accepted', 'received'])
+        .get(),
+      db.collection('exchanges')
+        .where('receiverId', '==', uid)
+        .where('status', 'in', ['accepted', 'received'])
+        .get(),
+    ]);
+
+    const activeCount = activeAsSender.size + activeAsReceiver.size;
+    if (activeCount > 0) {
+      throw new HttpsError(
+        'failed-precondition',
+        `Tienes ${activeCount} intercambio(s) activo(s). Completa o cancela tus intercambios antes de eliminar tu cuenta.`
+      );
+    }
+
+    // 3. Cancel pending/counter_offered exchanges
+    const [pendingAsSender, pendingAsReceiver, counterAsSender, counterAsReceiver] = await Promise.all([
+      db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'pending').get(),
+      db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'pending').get(),
+      db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'counter_offered').get(),
+      db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'counter_offered').get(),
+    ]);
+
+    const exchangesToCancel = [
+      ...pendingAsSender.docs,
+      ...pendingAsReceiver.docs,
+      ...counterAsSender.docs,
+      ...counterAsReceiver.docs,
+    ];
+
+    // Deduplicate by doc id
+    const seenExchangeIds = new Set();
+    const uniqueExchangesToCancel = exchangesToCancel.filter((doc) => {
+      if (seenExchangeIds.has(doc.id)) return false;
+      seenExchangeIds.add(doc.id);
+      return true;
+    });
+
+    // Batch cancel exchanges (max 500 per batch)
+    const cancelBatches = [];
+    let currentBatch = db.batch();
+    let opCount = 0;
+
+    for (const doc of uniqueExchangesToCancel) {
+      currentBatch.update(doc.ref, {
+        status: 'cancelled',
+        cancelledReason: 'account_deleted',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      opCount++;
+      if (opCount >= 499) {
+        cancelBatches.push(currentBatch.commit());
+        currentBatch = db.batch();
+        opCount = 0;
+      }
+    }
+    if (opCount > 0) cancelBatches.push(currentBatch.commit());
+    await Promise.all(cancelBatches);
+    console.log(`Cancelled ${uniqueExchangesToCancel.length} pending exchanges`);
+
+    // 4. Handle user's items
+    const itemsSnapshot = await db.collection('items').where('ownerId', '==', uid).get();
+    const bucket = admin.storage().bucket();
+    const itemBatches = [];
+    let itemBatch = db.batch();
+    let itemOpCount = 0;
+
+    for (const doc of itemsSnapshot.docs) {
+      const item = doc.data();
+
+      if (item.status === 'available') {
+        // Delete images from Storage
+        if (item.imageUrls && item.imageUrls.length > 0) {
+          for (const url of item.imageUrls) {
+            try {
+              const path = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+              await bucket.file(path).delete();
+              console.log(`Deleted image: ${path}`);
+            } catch (err) {
+              console.error(`Error deleting image: ${err.message}`);
+            }
+          }
+        }
+        // Delete the item document (this triggers cancelExchangesOnItemDelete)
+        itemBatch.delete(doc.ref);
+      } else {
+        // Mark exchanged items as owner deleted
+        itemBatch.update(doc.ref, { ownerDeleted: true });
+      }
+
+      itemOpCount++;
+      if (itemOpCount >= 499) {
+        itemBatches.push(itemBatch.commit());
+        itemBatch = db.batch();
+        itemOpCount = 0;
+      }
+    }
+    if (itemOpCount > 0) itemBatches.push(itemBatch.commit());
+    await Promise.all(itemBatches);
+    console.log(`Processed ${itemsSnapshot.size} items`);
+
+    // 5. Delete notifications for this user
+    const notificationsSnapshot = await db.collection('notifications').where('userId', '==', uid).get();
+    const notifBatches = [];
+    let notifBatch = db.batch();
+    let notifOpCount = 0;
+
+    for (const doc of notificationsSnapshot.docs) {
+      notifBatch.delete(doc.ref);
+      notifOpCount++;
+      if (notifOpCount >= 499) {
+        notifBatches.push(notifBatch.commit());
+        notifBatch = db.batch();
+        notifOpCount = 0;
+      }
+    }
+    if (notifOpCount > 0) notifBatches.push(notifBatch.commit());
+    await Promise.all(notifBatches);
+    console.log(`Deleted ${notificationsSnapshot.size} notifications`);
+
+    // 6. Anonymize messages sent by this user in all exchanges
+    const [exchangesAsSender, exchangesAsReceiver] = await Promise.all([
+      db.collection('exchanges').where('senderId', '==', uid).get(),
+      db.collection('exchanges').where('receiverId', '==', uid).get(),
+    ]);
+
+    const allExchangeDocs = [...exchangesAsSender.docs, ...exchangesAsReceiver.docs];
+    const seenIds = new Set();
+    const uniqueExchanges = allExchangeDocs.filter((doc) => {
+      if (seenIds.has(doc.id)) return false;
+      seenIds.add(doc.id);
+      return true;
+    });
+
+    for (const exchangeDoc of uniqueExchanges) {
+      const messagesSnapshot = await db.collection('exchanges')
+        .doc(exchangeDoc.id)
+        .collection('messages')
+        .where('senderId', '==', uid)
+        .get();
+
+      const msgBatches = [];
+      let msgBatch = db.batch();
+      let msgOpCount = 0;
+
+      for (const msgDoc of messagesSnapshot.docs) {
+        msgBatch.update(msgDoc.ref, { senderName: 'Usuario eliminado' });
+        msgOpCount++;
+        if (msgOpCount >= 499) {
+          msgBatches.push(msgBatch.commit());
+          msgBatch = db.batch();
+          msgOpCount = 0;
+        }
+      }
+      if (msgOpCount > 0) msgBatches.push(msgBatch.commit());
+      await Promise.all(msgBatches);
+    }
+    console.log(`Anonymized messages in ${uniqueExchanges.length} exchanges`);
+
+    // 7. Anonymize user document (soft delete)
+    await db.collection('users').doc(uid).update({
+      name: 'Usuario eliminado',
+      email: '',
+      phoneNumber: '',
+      photoUrl: '',
+      fcmToken: '',
+      deleted: true,
+      deletedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    console.log('User document anonymized');
+
+    // 8. Delete Firebase Auth account
+    await admin.auth().deleteUser(uid);
+    console.log('Firebase Auth account deleted');
+
+    return { success: true };
   }
 );
