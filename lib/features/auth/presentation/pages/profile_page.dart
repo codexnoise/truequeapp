@@ -463,6 +463,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface),
               onTap: () => context.push('/terms'),
             ),
+            ListTile(
+              leading: Icon(Icons.delete_forever, color: colorScheme.error),
+              title: Text('Eliminar cuenta', style: TextStyle(color: colorScheme.error)),
+              trailing: Icon(Icons.chevron_right, color: colorScheme.error),
+              onTap: () => context.push('/delete-account'),
+            ),
           ],
         ),
       ),

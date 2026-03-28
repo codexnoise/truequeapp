@@ -116,4 +116,13 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> deleteAccount(String password) async {
+    try {
+      await remoteDataSource.deleteAccount(password);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

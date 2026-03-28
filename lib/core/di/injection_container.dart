@@ -5,6 +5,7 @@ import 'package:truequeapp/features/home/domain/usecases/update_item_usecase.dar
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/delete_account_usecase.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
@@ -34,6 +35,7 @@ Future<void> init() async {
   // We use registerLazySingleton so they are only created when needed
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase(sl()));
 
   setupHomeDependencies();
   setupNotificationDependencies();

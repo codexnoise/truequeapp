@@ -1,12 +1,12 @@
 class TermsAndConditions {
   TermsAndConditions._();
 
-  static const String lastUpdated = '19 de marzo de 2026';
+  static const String lastUpdated = '26 de marzo de 2026';
 
   static const String content = '''
 TÉRMINOS Y CONDICIONES DE USO DE TRUEQUEAPP
 
-Última actualización: 19 de marzo de 2026
+Última actualización: 26 de marzo de 2026
 
 1. ACEPTACIÓN DE LOS TÉRMINOS
 
@@ -42,6 +42,15 @@ Al registrarse y utilizar TruequeApp, el usuario declara haber leído, comprendi
 
 4.5. TruequeApp se reserva el derecho de suspender o eliminar cuentas que contengan información falsa o que incumplan estos Términos y Condiciones.
 
+4.6. Eliminación de cuenta: El usuario puede eliminar su cuenta en cualquier momento desde la sección "Mi Perfil" dentro de la aplicación. Al solicitar la eliminación:
+a) Se eliminarán todos los artículos disponibles del usuario y sus imágenes asociadas.
+b) Se cancelarán automáticamente todos los intercambios pendientes, notificando a los usuarios afectados.
+c) No será posible eliminar la cuenta si el usuario tiene intercambios en curso (aceptados o en proceso de entrega). Estos deberán completarse o cancelarse previamente.
+d) Los datos personales del usuario (nombre, correo, teléfono, foto) serán anonimizados.
+e) Los intercambios completados permanecerán visibles para la contraparte con el nombre "Usuario eliminado", a fin de preservar el historial de transacciones.
+f) La eliminación es permanente e irreversible. Una vez ejecutada, no será posible recuperar la cuenta ni los datos asociados.
+g) Para más detalles sobre el tratamiento de datos tras la eliminación, consulte nuestra Política de Privacidad disponible en truequeapp.com.
+
 5. PRIVACIDAD Y DATOS PERSONALES
 
 5.1. TruequeApp recopila y almacena los siguientes datos personales: nombre completo, correo electrónico, número de teléfono, foto de perfil (opcional) y token de notificaciones push.
@@ -52,7 +61,7 @@ Al registrarse y utilizar TruequeApp, el usuario declara haber leído, comprendi
 
 5.4. TruequeApp no vende, alquila ni comparte datos personales de los usuarios con terceros, salvo requerimiento de autoridad competente conforme a la legislación ecuatoriana vigente.
 
-5.5. El usuario puede solicitar la eliminación de su cuenta y datos personales contactando al equipo de TruequeApp a través de los canales de contacto proporcionados.
+5.5. El usuario puede eliminar su cuenta y datos personales directamente desde la aplicación, en la sección "Mi Perfil > Eliminar cuenta". Para más información sobre qué datos se eliminan y cuáles se conservan de forma anonimizada, consulte la sección 4.6 de estos Términos y nuestra Política de Privacidad.
 
 5.6. TruequeApp utiliza Firebase Cloud Messaging para enviar notificaciones push relacionadas con intercambios, donaciones y mensajes. El usuario puede desactivar las notificaciones desde la configuración de su dispositivo.
 
