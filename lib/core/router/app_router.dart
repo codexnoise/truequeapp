@@ -13,6 +13,7 @@ import '../../features/home/presentation/pages/item_detail_page.dart';
 import '../../features/home/presentation/pages/my_items_page.dart';
 import '../../features/messages/presentation/pages/chat_page.dart';
 import '../../features/messages/presentation/pages/conversations_page.dart';
+import '../../features/auth/presentation/pages/delete_account_page.dart';
 import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/auth/presentation/pages/recovery_page.dart';
@@ -144,6 +145,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             otherUserId: data['otherUserId'] as String,
           );
         },
+      ),
+      GoRoute(
+        path: '/delete-account',
+        name: 'delete-account',
+        builder: (context, state) => const DeleteAccountPage(),
       ),
       GoRoute(
         path: '/terms',

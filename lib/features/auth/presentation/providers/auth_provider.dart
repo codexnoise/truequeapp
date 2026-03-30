@@ -6,6 +6,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/push_notification_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/delete_account_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 
@@ -156,11 +157,26 @@ class AuthNotifier extends Notifier<AuthState> {
     if (currentState is AuthAuthenticated) {
       await sl<PushNotificationService>().removeUserToken(currentState.user.uid);
     }
-    
+
     // Logic for sign out
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('keep_session');
     state = AuthInitial();
+  }
+
+  Future<void> deleteAccount(String password) async {
+    final previousState = state;
+    state = AuthLoading();
+    try {
+      await sl<DeleteAccountUseCase>().execute(password);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('keep_session');
+      state = AuthInitial();
+    } catch (e) {
+      // Restore previous authenticated state to avoid redirect to /login
+      state = previousState;
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
   }
 }
 

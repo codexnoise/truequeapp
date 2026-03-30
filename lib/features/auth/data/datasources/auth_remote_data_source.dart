@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -15,6 +16,7 @@ abstract class AuthRemoteDataSource {
   Future<void> sendVerificationEmail();
   Future<bool> checkEmailVerified();
   bool get isEmailVerified;
+  Future<void> deleteAccount(String password);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -200,5 +202,43 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       throw Exception('Error al buscar cuenta: ${e.toString()}');
     }
+  }
+
+  @override
+  Future<void> deleteAccount(String password) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('No hay usuario autenticado');
+    }
+
+    // Re-authenticate before deletion
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: password,
+    );
+
+    try {
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+          throw Exception('La contraseña es incorrecta');
+        default:
+          throw Exception('Error de autenticación: ${e.message}');
+      }
+    }
+
+    // Call Cloud Function to delete all user data
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('deleteUserAccount')
+          .call();
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? 'Error al eliminar la cuenta');
+    }
+
+    // Sign out locally
+    await _firebaseAuth.signOut();
   }
 }
