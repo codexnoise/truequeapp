@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -16,44 +15,6 @@ class _DeleteAccountPageState extends ConsumerState<DeleteAccountPage> {
   bool _obscurePassword = true;
   bool _confirmed = false;
   bool _isDeleting = false;
-  bool _isCheckingExchanges = true;
-  int _activeExchangeCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkActiveExchanges();
-    });
-  }
-
-  Future<void> _checkActiveExchanges() async {
-    final authState = ref.read(authProvider);
-    if (authState is! AuthAuthenticated) return;
-
-    final uid = authState.user.uid;
-    final db = FirebaseFirestore.instance;
-
-    final results = await Future.wait([
-      db.collection('exchanges')
-          .where('senderId', isEqualTo: uid)
-          .where('status', whereIn: ['accepted', 'received'])
-          .get(),
-      db.collection('exchanges')
-          .where('receiverId', isEqualTo: uid)
-          .where('status', whereIn: ['accepted', 'received'])
-          .get(),
-    ]);
-
-    if (mounted) {
-      setState(() {
-        _activeExchangeCount = results[0].size + results[1].size;
-        _isCheckingExchanges = false;
-      });
-    }
-  }
-
-  bool get _hasActiveExchanges => _activeExchangeCount > 0;
 
   @override
   void dispose() {
@@ -105,11 +66,7 @@ class _DeleteAccountPageState extends ConsumerState<DeleteAccountPage> {
           ),
         ),
       ),
-      body: _isCheckingExchanges
-          ? Center(
-              child: CircularProgressIndicator(color: colorScheme.primary),
-            )
-          : GestureDetector(
+      body: GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
@@ -118,42 +75,6 @@ class _DeleteAccountPageState extends ConsumerState<DeleteAccountPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (_hasActiveExchanges) ...[
-                        // Active exchanges blocking message
-                        Card(
-                          color: colorScheme.errorContainer,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.swap_horiz,
-                                  color: colorScheme.onErrorContainer,
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'No puedes eliminar tu cuenta',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onErrorContainer,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Tienes $_activeExchangeCount intercambio(s) en curso (aceptados o en proceso de entrega). Debes completarlos o cancelarlos antes de eliminar tu cuenta.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: colorScheme.onErrorContainer,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ] else ...[
                         // Warning card
                         Card(
                           color: colorScheme.errorContainer,
@@ -298,7 +219,6 @@ class _DeleteAccountPageState extends ConsumerState<DeleteAccountPage> {
                               ),
                             ),
                           ),
-                      ],
                     ],
                   ),
                 ),
