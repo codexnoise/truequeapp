@@ -668,32 +668,17 @@ exports.deleteUserAccount = onCall(
 
     console.log(`Starting account deletion for user: ${uid}`);
 
-    // 2. Check for active exchanges (accepted or received)
-    const [activeAsSender, activeAsReceiver] = await Promise.all([
-      db.collection('exchanges')
-        .where('senderId', '==', uid)
-        .where('status', 'in', ['accepted', 'received'])
-        .get(),
-      db.collection('exchanges')
-        .where('receiverId', '==', uid)
-        .where('status', 'in', ['accepted', 'received'])
-        .get(),
-    ]);
-
-    const activeCount = activeAsSender.size + activeAsReceiver.size;
-    if (activeCount > 0) {
-      throw new HttpsError(
-        'failed-precondition',
-        `Tienes ${activeCount} intercambio(s) activo(s). Completa o cancela tus intercambios antes de eliminar tu cuenta.`
-      );
-    }
-
-    // 3. Cancel pending/counter_offered exchanges
-    const [pendingAsSender, pendingAsReceiver, counterAsSender, counterAsReceiver] = await Promise.all([
+    // 2. Cancel pending/counter_offered/accepted/received exchanges
+    const [pendingAsSender, pendingAsReceiver, counterAsSender, counterAsReceiver,
+           acceptedAsSender, acceptedAsReceiver, receivedAsSender, receivedAsReceiver] = await Promise.all([
       db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'pending').get(),
       db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'pending').get(),
       db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'counter_offered').get(),
       db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'counter_offered').get(),
+      db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'accepted').get(),
+      db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'accepted').get(),
+      db.collection('exchanges').where('senderId', '==', uid).where('status', '==', 'received').get(),
+      db.collection('exchanges').where('receiverId', '==', uid).where('status', '==', 'received').get(),
     ]);
 
     const exchangesToCancel = [
@@ -701,6 +686,10 @@ exports.deleteUserAccount = onCall(
       ...pendingAsReceiver.docs,
       ...counterAsSender.docs,
       ...counterAsReceiver.docs,
+      ...acceptedAsSender.docs,
+      ...acceptedAsReceiver.docs,
+      ...receivedAsSender.docs,
+      ...receivedAsReceiver.docs,
     ];
 
     // Deduplicate by doc id
