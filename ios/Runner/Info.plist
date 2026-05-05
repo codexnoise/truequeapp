@@ -51,5 +51,10 @@
 		<string>background-fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<!-- Camera & Photo Library access for item images -->
+	<key>NSCameraUsageDescription</key>
+	<string>Trueque necesita acceso a tu cámara para que puedas tomar fotos de los artículos que publicas.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Trueque necesita acceso a tus fotos para adjuntarlas a tus publicaciones.</string>
 </dict>
 </plist>
