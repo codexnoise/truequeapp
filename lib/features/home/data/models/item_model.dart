@@ -11,6 +11,7 @@ class ItemModel extends ItemEntity {
     required super.imageUrls,
     required super.desiredItem,
     required super.status,
+    super.acquisitionDate,
   });
 
   factory ItemModel.fromFirestore(DocumentSnapshot doc) {
@@ -24,6 +25,7 @@ class ItemModel extends ItemEntity {
       imageUrls: List<String>.from(data['imageUrls'] ?? []),
       desiredItem: data['desiredItem'] ?? '',
       status: data['status'] ?? 'available',
+      acquisitionDate: (data['acquisitionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -37,10 +39,16 @@ class ItemModel extends ItemEntity {
       imageUrls: entity.imageUrls,
       desiredItem: entity.desiredItem,
       status: entity.status,
+      acquisitionDate: entity.acquisitionDate,
     );
   }
 
-  ItemModel copyWith({String? id, List<String>? imageUrls, String? status}) {
+  ItemModel copyWith({
+    String? id,
+    List<String>? imageUrls,
+    String? status,
+    DateTime? acquisitionDate,
+  }) {
     return ItemModel(
       id: id ?? this.id,
       ownerId: ownerId,
@@ -50,6 +58,7 @@ class ItemModel extends ItemEntity {
       imageUrls: imageUrls ?? this.imageUrls,
       desiredItem: desiredItem,
       status: status ?? this.status,
+      acquisitionDate: acquisitionDate ?? this.acquisitionDate,
     );
   }
 
@@ -62,6 +71,8 @@ class ItemModel extends ItemEntity {
       'imageUrls': imageUrls,
       'desiredItem': desiredItem,
       'status': status,
+      'acquisitionDate':
+          acquisitionDate != null ? Timestamp.fromDate(acquisitionDate!) : null,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
