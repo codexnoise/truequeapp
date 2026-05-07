@@ -4,6 +4,48 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+async function createInAppNotification({ userId, exchangeId, type, title, body, senderId, senderName }) {
+  if (!userId || !type || !title) return null;
+  try {
+    const data = {
+      userId: userId,
+      exchangeId: exchangeId || '',
+      type: type,
+      title: title,
+      body: body || '',
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (senderId) data.senderId = senderId;
+    if (senderName) data.senderName = senderName;
+    return await admin.firestore().collection('notifications').add(data);
+  } catch (error) {
+    console.error('Error creating in-app notification:', error);
+    return null;
+  }
+}
+
+async function sendPushAndCleanToken(userId, message) {
+  try {
+    return await admin.messaging().send(message);
+  } catch (error) {
+    if (error.code === 'messaging/registration-token-not-registered' ||
+        error.code === 'messaging/invalid-registration-token') {
+      try {
+        await admin.firestore().collection('users').doc(userId).update({
+          fcmToken: admin.firestore.FieldValue.delete(),
+        });
+        console.log('Cleaned up stale FCM token for user:', userId);
+      } catch (cleanupError) {
+        console.error('Error cleaning up stale token:', cleanupError);
+      }
+    } else {
+      console.error('Error sending push notification:', error);
+    }
+    return null;
+  }
+}
+
 exports.sendExchangeNotification = onDocumentCreated(
   'exchanges/{exchangeId}',
   async (event) => {
@@ -16,59 +58,62 @@ exports.sendExchangeNotification = onDocumentCreated(
     }
 
     try {
-      // Get receiver's FCM token
-      const receiverDoc = await admin.firestore()
-        .collection('users')
-        .doc(exchange.receiverId)
-        .get();
+      // Fetch item and sender details — required to build the notification body.
+      // Receiver doc is fetched only for the FCM token (in-app notification
+      // doesn't require it, so missing/no token must not block it).
+      const [itemDoc, senderDoc, receiverDoc] = await Promise.all([
+        admin.firestore().collection('items').doc(exchange.receiverItemId).get(),
+        admin.firestore().collection('users').doc(exchange.senderId).get(),
+        admin.firestore().collection('users').doc(exchange.receiverId).get(),
+      ]);
 
-      if (!receiverDoc.exists) {
-        console.log('Receiver not found');
+      if (!itemDoc.exists) {
+        console.log('Item not found');
+        return null;
+      }
+      if (!senderDoc.exists) {
+        console.log('Sender not found');
         return null;
       }
 
-      const receiverData = receiverDoc.data();
-      const fcmToken = receiverData.fcmToken;
+      const item = itemDoc.data();
+      const sender = senderDoc.data();
 
+      // Prepare notification content
+      const isDonation = exchange.type === 'donation_request';
+      const title = isDonation ? '¡Nueva solicitud de donación!' : '¡Nueva propuesta de intercambio!';
+      const body = isDonation
+        ? `${sender.name || 'Alguien'} ha solicitado tu artículo "${item.title}"`
+        : `${sender.name || 'Alguien'} quiere intercambiar tu artículo "${item.title}"`;
+
+      // Persist in-app notification first so it appears in the bell list
+      // even if the push fails or the device has no FCM token.
+      await createInAppNotification({
+        userId: exchange.receiverId,
+        exchangeId: event.params.exchangeId,
+        type: 'exchange_new',
+        title: title,
+        body: body,
+        senderId: exchange.senderId,
+        senderName: sender.name,
+      });
+
+      // Mark exchange as having dispatched its initial notification so we
+      // don't re-create the in-app entry on retries.
+      await snap.ref.update({ notificationSent: true });
+
+      if (!receiverDoc.exists) {
+        console.log('Receiver not found, skipping push');
+        return null;
+      }
+
+      const fcmToken = receiverDoc.data().fcmToken;
       if (!fcmToken) {
         console.log('No FCM token for receiver:', exchange.receiverId);
         return null;
       }
 
       console.log('Attempting to send notification to token:', fcmToken);
-
-      // Get item details
-      const itemDoc = await admin.firestore()
-        .collection('items')
-        .doc(exchange.receiverItemId)
-        .get();
-
-      if (!itemDoc.exists) {
-        console.log('Item not found');
-        return null;
-      }
-
-      const item = itemDoc.data();
-
-      // Get sender details
-      const senderDoc = await admin.firestore()
-        .collection('users')
-        .doc(exchange.senderId)
-        .get();
-
-      if (!senderDoc.exists) {
-        console.log('Sender not found');
-        return null;
-      }
-
-      const sender = senderDoc.data();
-
-      // Prepare notification
-      const isDonation = exchange.type === 'donation_request';
-      const title = isDonation ? '¡Nueva solicitud de donación!' : '¡Nueva propuesta de intercambio!';
-      const body = isDonation
-        ? `${sender.name || 'Alguien'} ha solicitado tu artículo "${item.title}"`
-        : `${sender.name || 'Alguien'} quiere intercambiar tu artículo "${item.title}"`;
 
       const message = {
         token: fcmToken,
@@ -103,13 +148,8 @@ exports.sendExchangeNotification = onDocumentCreated(
         },
       };
 
-      // Send notification
-      const response = await admin.messaging().send(message);
+      const response = await sendPushAndCleanToken(exchange.receiverId, message);
       console.log('Notification sent successfully:', response);
-
-      // Mark notification as sent
-      await snap.ref.update({ notificationSent: true });
-
       return response;
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -238,8 +278,19 @@ exports.updateNotificationStatus = onDocumentUpdated(
         console.log(`Cancelled ${usersToNotify.size} exchanges due to acceptance`);
 
         // Send notifications to affected users
+        const cancelTitle = 'Intercambio cancelado';
+        const cancelBody = 'Un intercambio ha sido cancelado porque el artículo ya no está disponible.';
         for (const userId of usersToNotify) {
           try {
+            // Persist in-app notification regardless of push delivery
+            await createInAppNotification({
+              userId: userId,
+              exchangeId: event.params.exchangeId,
+              type: 'exchange_cancelled',
+              title: cancelTitle,
+              body: cancelBody,
+            });
+
             const userDoc = await admin.firestore().collection('users').doc(userId).get();
             if (userDoc.exists) {
               const userData = userDoc.data();
@@ -249,8 +300,8 @@ exports.updateNotificationStatus = onDocumentUpdated(
                 const message = {
                   token: fcmToken,
                   notification: {
-                    title: 'Intercambio cancelado',
-                    body: 'Un intercambio ha sido cancelado porque el artículo ya no está disponible.',
+                    title: cancelTitle,
+                    body: cancelBody,
                   },
                   data: {
                     userId: userId,
@@ -275,7 +326,7 @@ exports.updateNotificationStatus = onDocumentUpdated(
                   },
                 };
 
-                await admin.messaging().send(message);
+                await sendPushAndCleanToken(userId, message);
                 console.log(`Cancellation notification sent to user ${userId}`);
               }
             }
@@ -289,25 +340,12 @@ exports.updateNotificationStatus = onDocumentUpdated(
     }
 
     // Send notification when status changes
-    if (before.status !== after.status) {
+    // Skip cascading-cancel cases here: those blocks already created the
+    // in-app notifications and pushes, so the per-exchange handler would otherwise duplicate them.
+    const skipReasons = new Set(['item_no_longer_available', 'item_deleted', 'parent_exchange_cancelled', 'account_deleted']);
+    if (before.status !== after.status &&
+        !(after.status === 'cancelled' && skipReasons.has(after.cancelledReason))) {
       try {
-        const senderDoc = await admin.firestore()
-          .collection('users')
-          .doc(after.senderId) // Notify sender about status change
-          .get();
-
-        if (!senderDoc.exists) return null;
-
-        const senderData = senderDoc.data();
-        const fcmToken = senderData.fcmToken;
-
-        if (!fcmToken) {
-        console.log('No FCM token for sender:', after.senderId);
-        return null;
-      }
-
-      console.log('Attempting to send status update to token:', fcmToken);
-
         let title, body, notificationType;
 
         switch (after.status) {
@@ -335,6 +373,18 @@ exports.updateNotificationStatus = onDocumentUpdated(
             break;
           case 'received': {
             // For 'received', notify the RECEIVER (product owner), not the sender
+            const receivedTitle = '¡Producto recibido!';
+            const receivedBody = 'El solicitante ha confirmado la recepción del producto. ¡Gracias por usar TruequeApp!';
+
+            // Always persist the in-app notification first
+            await createInAppNotification({
+              userId: after.receiverId,
+              exchangeId: event.params.exchangeId,
+              type: 'exchange_received',
+              title: receivedTitle,
+              body: receivedBody,
+            });
+
             const receiverDoc = await admin.firestore()
               .collection('users')
               .doc(after.receiverId)
@@ -353,8 +403,8 @@ exports.updateNotificationStatus = onDocumentUpdated(
             const receivedMessage = {
               token: receiverToken,
               notification: {
-                title: '¡Producto recibido!',
-                body: 'El solicitante ha confirmado la recepción del producto. ¡Gracias por usar TruequeApp!',
+                title: receivedTitle,
+                body: receivedBody,
               },
               data: {
                 userId: after.receiverId,
@@ -380,7 +430,7 @@ exports.updateNotificationStatus = onDocumentUpdated(
               },
             };
 
-            await admin.messaging().send(receivedMessage);
+            await sendPushAndCleanToken(after.receiverId, receivedMessage);
             console.log('Received notification sent to receiver:', after.receiverId);
             return null;
           }
@@ -397,6 +447,34 @@ exports.updateNotificationStatus = onDocumentUpdated(
           default:
             return null;
         }
+
+        // Persist in-app notification first so it shows in the bell list
+        // even if the device has no FCM token or the push fails.
+        await createInAppNotification({
+          userId: after.senderId,
+          exchangeId: event.params.exchangeId,
+          type: notificationType,
+          title: title,
+          body: body,
+        });
+
+        // Look up the sender's FCM token to send the push (in-app already persisted above)
+        const senderDoc = await admin.firestore()
+          .collection('users')
+          .doc(after.senderId)
+          .get();
+
+        if (!senderDoc.exists) return null;
+
+        const senderData = senderDoc.data();
+        const fcmToken = senderData.fcmToken;
+
+        if (!fcmToken) {
+          console.log('No FCM token for sender:', after.senderId);
+          return null;
+        }
+
+        console.log('Attempting to send status update to token:', fcmToken);
 
         const message = {
           token: fcmToken,
@@ -428,7 +506,7 @@ exports.updateNotificationStatus = onDocumentUpdated(
           },
         };
 
-        await admin.messaging().send(message);
+        await sendPushAndCleanToken(after.senderId, message);
         console.log('Status update notification sent');
       } catch (error) {
         console.error('Error sending status update:', error);
@@ -600,8 +678,19 @@ exports.cancelExchangesOnItemDelete = onDocumentDeleted(
       console.log(`Cancelled exchanges for deleted item ${itemId}`);
 
       // Send notifications to affected users
+      const deleteTitle = 'Intercambio cancelado';
+      const deleteBody = 'Un intercambio ha sido cancelado porque el artículo fue eliminado.';
       for (const userId of usersToNotify) {
         try {
+          // Persist in-app notification regardless of push delivery
+          await createInAppNotification({
+            userId: userId,
+            exchangeId: itemId,
+            type: 'exchange_cancelled',
+            title: deleteTitle,
+            body: deleteBody,
+          });
+
           const userDoc = await admin.firestore().collection('users').doc(userId).get();
           if (userDoc.exists) {
             const userData = userDoc.data();
@@ -611,8 +700,8 @@ exports.cancelExchangesOnItemDelete = onDocumentDeleted(
               const message = {
                 token: fcmToken,
                 notification: {
-                  title: 'Intercambio cancelado',
-                  body: 'Un intercambio ha sido cancelado porque el artículo fue eliminado.',
+                  title: deleteTitle,
+                  body: deleteBody,
                 },
                 data: {
                   userId: userId,
@@ -637,7 +726,7 @@ exports.cancelExchangesOnItemDelete = onDocumentDeleted(
                 },
               };
 
-              await admin.messaging().send(message);
+              await sendPushAndCleanToken(userId, message);
               console.log(`Cancellation notification sent to user ${userId}`);
             }
           }
