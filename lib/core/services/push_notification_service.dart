@@ -98,12 +98,11 @@ class PushNotificationService {
     debugPrint('Title: ${message.notification?.title}');
     debugPrint('Body: ${message.notification?.body}');
     debugPrint('Data: ${message.data}');
-    
-    // Show local notification when app is in foreground
+
+    // Show local notification when app is in foreground.
+    // The notifications collection is now populated server-side by Cloud
+    // Functions, so we no longer save here to avoid duplicate documents.
     _showLocalNotification(message);
-    
-    // Save notification to Firestore
-    _saveNotificationToFirestore(message);
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
@@ -141,10 +140,8 @@ class PushNotificationService {
     debugPrint('Message opened app: ${message.messageId}');
     final exchangeId = message.data['exchangeId'] as String?;
     final type = message.data['type'] as String?;
-    
-    // Save notification to Firestore
-    _saveNotificationToFirestore(message);
 
+    // The notifications collection is populated server-side; just navigate.
     if (exchangeId != null) {
       if (type == 'new_message') {
         _navigateToChat(exchangeId, message.data);
@@ -227,38 +224,5 @@ class PushNotificationService {
     }
   }
 
-  Future<void> _saveNotificationToFirestore(RemoteMessage message) async {
-    try {
-      final userId = message.data['userId'] as String?;
-      final exchangeId = message.data['exchangeId'] as String?;
-      final type = message.data['type'] as String?;
-      
-      if (userId == null || exchangeId == null) {
-        debugPrint('Missing userId or exchangeId in notification data');
-        return;
-      }
-
-      // Skip new_message type: already persisted by sendMessage() in MessageRepository.
-      // Saving it again would re-trigger the Cloud Function and cause an infinite loop.
-      if (type == 'new_message') {
-        debugPrint('Skipping Firestore save for new_message (already exists)');
-        return;
-      }
-
-      await _firestore.collection('notifications').add({
-        'userId': userId,
-        'exchangeId': exchangeId,
-        'type': type ?? 'exchange_new',
-        'title': message.notification?.title ?? 'Nueva notificación',
-        'body': message.notification?.body ?? '',
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      
-      debugPrint('Notification saved to Firestore for user: $userId');
-    } catch (e) {
-      debugPrint('Error saving notification to Firestore: $e');
-    }
-  }
 }
 

@@ -132,72 +132,72 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: .start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Buscar artículos...',
-                    prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
-                    filled: true,
-                    fillColor: colorScheme.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Buscar artículos...',
+                  prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('CATEGORÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2, color: colorScheme.onSurface)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text('CATEGORÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2, color: colorScheme.onSurface)),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 16),
+                children: [
+                  _CategoryChip(
+                    label: 'Todos',
+                    isSelected: _selectedCategory == null,
+                    onTap: () => setState(() => _selectedCategory = null),
+                  ),
+                  ...categories.entries.map((entry) {
+                    return _CategoryChip(
+                      label: entry.value,
+                      isSelected: _selectedCategory == entry.key,
+                      onTap: () => setState(() => _selectedCategory = entry.key),
+                    );
+                  }),
+                ],
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.only(left: 16),
-                  children: [
-                    _CategoryChip(
-                      label: 'Todos',
-                      isSelected: _selectedCategory == null,
-                      onTap: () => setState(() => _selectedCategory = null),
-                    ),
-                    ...categories.entries.map((entry) {
-                      return _CategoryChip(
-                        label: entry.value,
-                        isSelected: _selectedCategory == entry.key,
-                        onTap: () => setState(() => _selectedCategory = entry.key),
-                      );
-                    }),
-                  ],
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CheckboxListTile(
+                title: const Text("Solo donaciones"),
+                value: _showOnlyFreeItems,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _showOnlyFreeItems = value ?? false;
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                activeColor: colorScheme.primary,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: CheckboxListTile(
-                  title: const Text("Solo donaciones"),
-                  value: _showOnlyFreeItems,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _showOnlyFreeItems = value ?? false;
-                    });
-                  },
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: colorScheme.primary,
-                ),
-              ),
-              Padding(
+            ),
+            Expanded(
+              child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: availableItems.when(
                   data: (items) {
@@ -212,8 +212,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     }
 
                     return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 12,
@@ -231,8 +229,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   error: (err, stack) => Center(child: Text("Error: $err")),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
