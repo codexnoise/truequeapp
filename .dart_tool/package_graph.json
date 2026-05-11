@@ -10,6 +10,7 @@
         "cloud_firestore",
         "cloud_functions",
         "cupertino_icons",
+        "firebase_analytics",
         "firebase_auth",
         "firebase_core",
         "firebase_messaging",
@@ -115,6 +116,17 @@
       "dependencies": [
         "cloud_functions_platform_interface",
         "cloud_functions_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_analytics",
+      "version": "12.1.2",
+      "dependencies": [
+        "firebase_analytics_platform_interface",
+        "firebase_analytics_web",
         "firebase_core",
         "firebase_core_platform_interface",
         "flutter"
@@ -528,6 +540,29 @@
       "name": "cloud_functions_platform_interface",
       "version": "5.8.9",
       "dependencies": [
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_analytics_web",
+      "version": "0.6.1+2",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_analytics_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "firebase_analytics_platform_interface",
+      "version": "5.0.6",
+      "dependencies": [
+        "_flutterfire_internals",
         "firebase_core",
         "flutter",
         "meta",
