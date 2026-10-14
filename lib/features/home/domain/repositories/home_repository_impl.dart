@@ -34,7 +34,10 @@ class HomeRepositoryImpl implements HomeRepository {
     }
 
     final model = ItemModel.fromEntity(item).copyWith(imageUrls: uploadedUrls);
-    await _firestore.collection('items').add(model.toFirestore());
+    await _firestore.collection('items').add({
+      ...model.toFirestore(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
