@@ -65,7 +65,10 @@ class ProfileNotifier extends Notifier<ProfileState> {
     try {
       await sl<AuthRepository>().updateNotifyNewItems(uid, value);
     } catch (e) {
-      state = current;
+      final s = state;
+      if (s is ProfileLoaded && s.user.notifyNewItems == value) {
+        state = ProfileLoaded(s.user.copyWith(notifyNewItems: !value));
+      }
       rethrow;
     }
   }

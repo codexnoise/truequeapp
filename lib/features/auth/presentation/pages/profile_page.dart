@@ -322,6 +322,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
+    final switchUser = switch (state) {
+      ProfileLoaded(:final user) => user,
+      ProfileSaving(:final user) => user,
+      _ => null,
+    };
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -464,14 +470,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 );
               },
             ),
-            if (state is ProfileLoaded || state is ProfileSaving)
+            if (switchUser != null)
               SwitchListTile(
                 title: const Text('Avisarme de artículos nuevos'),
                 subtitle: const Text('Recibir una notificación cuando alguien publique'),
-                value: (state is ProfileLoaded
-                        ? state.user
-                        : (state as ProfileSaving).user)
-                    .notifyNewItems,
+                value: switchUser.notifyNewItems,
                 activeTrackColor: colorScheme.primary,
                 onChanged: state is ProfileSaving ? null : _toggleNotifyNewItems,
               ),
