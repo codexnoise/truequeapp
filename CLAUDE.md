@@ -4,7 +4,7 @@ App Flutter de **trueque y donación** entre particulares. Permite publicar art�
 
 - **Mercado objetivo**: Colombia, Ecuador, Perú (Spanish-speaking LATAM)
 - **App ID Android**: `com.truequeapp.truequeapp`
-- **Firebase project**: `truequeapp-c2f82` (region funciones: `southamerica-west1`)
+- **Firebase project**: `truequeapp-c2f82` (región funciones: `us-central1`)
 - **Estado actual**: publicada en Producción en Play Store (Android). iOS aún no está en App Store.
 
 ---
@@ -133,8 +133,8 @@ La mayoría tiene `name:` definido — útil para `context.pushNamed(...)` y par
 
 | Colección | Campos clave |
 |---|---|
-| `users/{uid}` | `email, name, phoneNumber, photoUrl, fcmToken, tokenUpdatedAt` |
-| `items/{id}` | `ownerId, title, description, categoryId, imageUrls[], desiredItem, status, acquisitionDate` |
+| `users/{uid}` | `uid, email, name, phoneNumber, photoUrl, fcmToken, tokenUpdatedAt, notifyNewItems` (bool; ausente = `true`) |
+| `items/{id}` | `ownerId, title, description, categoryId, imageUrls[], desiredItem, status, createdAt` (`createdAt` solo se escribe al crear) |
 | `exchanges/{id}` | `senderId, receiverId, senderItemId, receiverItemId, message, status, type, parentExchangeId, createdAt, updatedAt, lastMessage, lastMessageAt, lastMessageSenderId, notificationSent, cancelledReason` |
 | `exchanges/{id}/messages/{msgId}` | `senderId, senderName, text, createdAt` (subcolección) |
 | `notifications/{id}` | `userId, exchangeId, type, title, body, isRead, createdAt, senderId, senderName` |
@@ -153,13 +153,14 @@ También: `cancelled` (con `cancelledReason`: `item_no_longer_available`, `item_
 
 ## Backend: Cloud Functions
 
-Directorio: `functions/` (Node.js 22). Despliegue en `southamerica-west1`.
+Directorio: `functions/` (Node.js 22). Despliegue en `us-central1` (región por defecto; el código no fija región).
 
 | Función | Trigger | Propósito |
 |---|---|---|
 | `sendExchangeNotification` | `exchanges/{id}` onCreate | Push + notificación in-app a quien recibe la propuesta |
 | `updateNotificationStatus` | `exchanges/{id}` onUpdate | Cascada de cancelaciones, cierre de exchanges padres, push de cambio de estado |
 | `sendMessageNotification` | `notifications/{id}` onCreate | Push para nuevos mensajes |
+| `notifyNewItem` | `items/{id}` onCreate | Push "artículo nuevo" a todos los usuarios con token, excepto el autor y quienes tengan `notifyNewItems == false` (lógica pura en `functions/new_item_recipients.js`) |
 
 > Importante: las notificaciones de intercambios (`exchange_*`) las crean las Cloud Functions. La excepción son los mensajes de chat: la app crea el documento `notifications/*` con `type: new_message` y `sendMessageNotification` envía el push (ignora los demás tipos para no duplicar).
 
@@ -187,8 +188,10 @@ Archivo principal: `lib/features/auth/presentation/providers/auth_provider.dart`
 
 Servicio: `lib/core/services/push_notification_service.dart` (singleton).
 
-- **Foreground**: muestra `flutter_local_notifications` con canal `exchange_requests` (importancia max).
-- **Background / closed**: notificación del sistema con tap → navega a `/exchange-detail` o `/chat` según `data.type` y `data.exchangeId`.
+- **Canales Android**: `exchange_requests` (importancia max) y `new_items` ("Artículos nuevos"), ambos creados en `initialize()`.
+- **Foreground**: muestra `flutter_local_notifications` con canal `exchange_requests`, o `new_items` para `type: new_item`.
+- **Background / closed**: notificación del sistema; el tap navega según `data.type`: `new_item` → `/item-detail` (carga por `itemId`), `new_message` → `/chat`, resto → `/exchange-detail`.
+- **App cerrada**: la push que abrió la app (`getInitialMessage`, o `getNotificationAppLaunchDetails` para notificaciones locales) se guarda como pendiente y se procesa cuando se monta `HomePage` (después del splash y con sesión). Se descarta al cerrar sesión.
 - **Token refresh**: re-guarda automáticamente en `users/{uid}.fcmToken` si hay usuario activo.
 
 ---

@@ -113,7 +113,7 @@ android.enableJetifier=true
 
 ### Canal de notificaciones Android
 
-El canal `exchange_requests` se configura en `_showLocalNotification()`:
+Los canales `exchange_requests` y `new_items` ("Artículos nuevos") se crean en `initialize()`. Los detalles de `exchange_requests` en `_showLocalNotification()`:
 
 ```dart
 AndroidNotificationDetails(
@@ -329,6 +329,11 @@ Firestore: users/{userId} { fcmToken: "...", tokenUpdatedAt: Timestamp }
 | Propuesta aceptada | `updateNotificationStatus` | Remitente de la propuesta | `exchange_requests` |
 | Propuesta rechazada | `updateNotificationStatus` | Remitente de la propuesta | `exchange_requests` |
 | Intercambio completado | `updateNotificationStatus` | Remitente de la propuesta | `exchange_requests` |
+| Artículo nuevo publicado | `notifyNewItem` | Todos los usuarios con token, excepto el autor y quienes desactivaron "Avisarme de artículos nuevos" en Perfil (`users/{uid}.notifyNewItems == false`) | `new_items` |
+
+La push de artículo nuevo lleva `data: { type: 'new_item', itemId }`. Al tocarla se abre `/item-detail`; si el artículo ya no existe se muestra "El artículo ya no está disponible". No crea documentos en `notifications/`.
+
+Si la app estaba cerrada, la push que la abrió se guarda como pendiente y se procesa cuando se monta `HomePage` (después del splash y con sesión iniciada).
 
 ---
 
