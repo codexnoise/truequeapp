@@ -24,24 +24,32 @@ class PushNotificationService {
 
   String? _currentUserId;
 
+  static const _exchangeChannelId = 'exchange_requests';
+  static const _exchangeChannelName = 'Exchange Requests';
+  static const _exchangeChannelDescription = 'Notifications for exchange requests and updates';
+
+  static const _newItemsChannelId = 'new_items';
+  static const _newItemsChannelName = 'Artículos nuevos';
+  static const _newItemsChannelDescription = 'Avisos cuando alguien publica un artículo';
+
   static const _exchangeChannel = AndroidNotificationDetails(
-    'exchange_requests',
-    'Exchange Requests',
-    channelDescription: 'Notifications for exchange requests and updates',
+    _exchangeChannelId,
+    _exchangeChannelName,
+    channelDescription: _exchangeChannelDescription,
     importance: Importance.max,
     priority: Priority.high,
   );
 
   static const _newItemsChannel = AndroidNotificationDetails(
-    'new_items',
-    'Artículos nuevos',
-    channelDescription: 'Avisos cuando alguien publica un artículo',
+    _newItemsChannelId,
+    _newItemsChannelName,
+    channelDescription: _newItemsChannelDescription,
     importance: Importance.high,
     priority: Priority.high,
   );
 
   /// Data of the push that launched the app from terminated state; handled
-  /// once the user is authenticated (see saveUserToken).
+  /// consumed by HomePage once the user is authenticated and on /home.
   Map<String, dynamic>? _pendingLaunchData;
 
   Future<void> initialize() async {
@@ -66,15 +74,35 @@ class PushNotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Dedicated Android channel so users can mute new-item pushes in system settings.
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          'new_items',
-          'Artículos nuevos',
-          description: 'Avisos cuando alguien publica un artículo',
-          importance: Importance.high,
-        ));
+    // Create Android channels explicitly so background FCM pushes (shown by
+    // the system, not by this plugin) find them even on a fresh install.
+    // new_items is separate so users can mute it in system settings.
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+      _exchangeChannelId,
+      _exchangeChannelName,
+      description: _exchangeChannelDescription,
+      importance: Importance.max,
+    ));
+    await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+      _newItemsChannelId,
+      _newItemsChannelName,
+      description: _newItemsChannelDescription,
+      importance: Importance.high,
+    ));
+
+    // App launched from terminated state by tapping a local notification
+    // (shown in foreground earlier). An FCM initial message overrides it below.
+    try {
+      final launchDetails = await _localNotifications.getNotificationAppLaunchDetails();
+      final payload = launchDetails?.notificationResponse?.payload;
+      if (launchDetails?.didNotificationLaunchApp == true && payload != null) {
+        _pendingLaunchData = Map<String, dynamic>.from(jsonDecode(payload) as Map);
+      }
+    } catch (e) {
+      debugPrint('Error reading notification launch details: $e');
+    }
 
     // Request permission for iOS
     await _requestPermission();
@@ -132,7 +160,7 @@ class PushNotificationService {
     // Handle message when app is opened from notification
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
 
-    // App launched from terminated state by tapping a push.
+    // App launched from terminated state by tapping an FCM push.
     final initialMessage = await _firebaseMessaging.getInitialMessage();
     if (initialMessage != null) {
       _pendingLaunchData = Map<String, dynamic>.from(initialMessage.data);
@@ -232,17 +260,21 @@ class PushNotificationService {
   }
 
   Future<void> _navigateToItemDetail(String itemId) async {
-    final item = await sl<HomeRepository>().getItemById(itemId);
-    final context = navigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
+    try {
+      final item = await sl<HomeRepository>().getItemById(itemId);
+      final context = navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
 
-    if (item == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El artículo ya no está disponible')),
-      );
-      return;
+      if (item == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El artículo ya no está disponible')),
+        );
+        return;
+      }
+      context.pushNamed('item-detail', extra: item);
+    } catch (e) {
+      debugPrint('Error navigating to item detail: $e');
     }
-    context.pushNamed('item-detail', extra: item);
   }
 
   void _navigateToExchangeDetail(String exchangeId) {
@@ -267,7 +299,6 @@ class PushNotificationService {
 
 
   Future<void> saveUserToken(String userId) async {
-    _consumePendingLaunchData();
     if (_fcmToken == null) return;
     
     _currentUserId = userId;
@@ -283,19 +314,20 @@ class PushNotificationService {
     }
   }
 
-  /// Navigates for the push that launched the app, once auth is restored and
-  /// the router has settled on /home (saveUserToken runs right after login).
-  void _consumePendingLaunchData() {
+  /// Navigates for the notification that launched the app, if any. Called by
+  /// HomePage after its first frame, so the user is authenticated and the
+  /// splash has already been left behind. Runs at most once per launch tap.
+  void consumePendingLaunchData() {
     final data = _pendingLaunchData;
     if (data == null) return;
     _pendingLaunchData = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 500), () => _handleNotificationData(data));
-    });
+    _handleNotificationData(data);
   }
 
   Future<void> removeUserToken(String userId) async {
     _currentUserId = null;
+    // Drop any unhandled launch tap so it can't navigate after a later login.
+    _pendingLaunchData = null;
 
     try {
       await _firestore.collection('users').doc(userId).set({
