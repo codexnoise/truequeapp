@@ -22,6 +22,8 @@ abstract class AuthRepository {
 
   Future<UserEntity?> getProfile(String uid);
   Future<void> updateProfile(String uid, {String? name, String? phoneNumber});
+  /// Persists the "notify me about new items" preference in users/{uid}.
+  Future<void> updateNotifyNewItems(String uid, bool value);
   Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> sendPasswordResetEmail(String email);
   Future<String?> findEmailByPhone(String phoneNumber);

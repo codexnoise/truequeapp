@@ -8,6 +8,7 @@ class UserModel extends UserEntity {
     super.name,
     super.phoneNumber,
     super.photoUrl,
+    super.notifyNewItems,
   });
 
   /// Factory to create a UserModel from a Firestore document map
@@ -18,6 +19,7 @@ class UserModel extends UserEntity {
       name: map['name'] as String?,
       phoneNumber: map['phoneNumber'] as String?,
       photoUrl: map['photoUrl'] as String?,
+      notifyNewItems: map['notifyNewItems'] as bool? ?? true,
     );
   }
 
@@ -32,6 +34,18 @@ class UserModel extends UserEntity {
     );
   }
 
+  @override
+  UserModel copyWith({bool? notifyNewItems}) {
+    return UserModel(
+      uid: uid,
+      email: email,
+      name: name,
+      phoneNumber: phoneNumber,
+      photoUrl: photoUrl,
+      notifyNewItems: notifyNewItems ?? this.notifyNewItems,
+    );
+  }
+
   /// Converts the model to a Map for Firestore storage if needed
   Map<String, dynamic> toMap() {
     return {
@@ -40,6 +54,7 @@ class UserModel extends UserEntity {
       'name': name,
       'phoneNumber': phoneNumber,
       'photoUrl': photoUrl,
+      'notifyNewItems': notifyNewItems,
     };
   }
 }

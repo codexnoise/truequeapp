@@ -70,6 +70,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updateNotifyNewItems(String uid, bool value) async {
+    try {
+      await remoteDataSource.updateNotifyNewItems(uid, value);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> changePassword(String currentPassword, String newPassword) async {
     try {
       await remoteDataSource.changePassword(currentPassword, newPassword);
