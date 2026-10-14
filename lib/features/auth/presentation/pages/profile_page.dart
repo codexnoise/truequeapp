@@ -464,13 +464,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 );
               },
             ),
-            if (state is ProfileLoaded)
+            if (state is ProfileLoaded || state is ProfileSaving)
               SwitchListTile(
                 title: const Text('Avisarme de artículos nuevos'),
                 subtitle: const Text('Recibir una notificación cuando alguien publique'),
-                value: state.user.notifyNewItems,
+                value: (state is ProfileLoaded
+                        ? state.user
+                        : (state as ProfileSaving).user)
+                    .notifyNewItems,
                 activeTrackColor: colorScheme.primary,
-                onChanged: _toggleNotifyNewItems,
+                onChanged: state is ProfileSaving ? null : _toggleNotifyNewItems,
               ),
             ListTile(
               leading: Icon(Icons.lock_outline, color: colorScheme.onSurface),
