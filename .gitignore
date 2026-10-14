@@ -45,7 +45,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
 # Android specific
 **/android/.gradle/
 **/android/local.properties
@@ -105,3 +104,6 @@ Thumbs.db
 .Trashes
 ehthumbs.db
 Desktop.ini
+
+# FVM (machine-local SDK symlinks/cache; pinned version lives in .fvmrc)
+.fvm/

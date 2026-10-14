@@ -5,26 +5,26 @@ App Flutter de **trueque y donación** entre particulares. Permite publicar art�
 - **Mercado objetivo**: Colombia, Ecuador, Perú (Spanish-speaking LATAM)
 - **App ID Android**: `com.truequeapp.truequeapp`
 - **Firebase project**: `truequeapp-c2f82` (region funciones: `southamerica-west1`)
-- **Estado actual**: primera versión en revisión para Producción en Play Store
+- **Estado actual**: publicada en Producción en Play Store (Android). iOS aún no está en App Store.
 
 ---
 
 ## Stack tecnológico
 
 ### Core
-- **Flutter** SDK ^3.10.0, **Dart** ^3.10
+- **Flutter** 3.44.9 (pinneado con FVM en `.fvmrc`), **Dart** ^3.12
 - **Riverpod 3.1** (state management)
 - **GetIt 9.2** (dependency injection, expuesto como `sl`)
 - **go_router 17.0** (routing declarativo)
 
 ### Firebase
-- `firebase_core` 4.3.0 — bootstrap
-- `firebase_auth` 6.1.3 — auth email/password + verificación de email
-- `cloud_firestore` 6.1.1 — DB principal
-- `firebase_storage` 13.0.6 — imágenes de items y avatares
-- `firebase_messaging` 16.0.0 — push notifications (FCM)
-- `cloud_functions` 6.0.6 — invocar Cloud Functions
-- `firebase_analytics` 12.0.0 — telemetría (solo screen tracking automático)
+- `firebase_core` 4.15.0 — bootstrap
+- `firebase_auth` 6.7.0 — auth email/password + verificación de email
+- `cloud_firestore` 6.10.0 — DB principal
+- `firebase_storage` 13.6.0 — imágenes de items y avatares
+- `firebase_messaging` 16.7.0 — push notifications (FCM)
+- `cloud_functions` 6.5.0 — invocar Cloud Functions
+- `firebase_analytics` 12.6.0 — telemetría (solo screen tracking automático)
 
 ### Otros
 - `shared_preferences` 2.5.4 — `keep_session`, configs locales
@@ -32,6 +32,8 @@ App Flutter de **trueque y donación** entre particulares. Permite publicar art�
 - `flutter_local_notifications` 20.1.0 — notificaciones foreground
 - `flutter_dotenv` 5.2.1 — variables de entorno (archivo `.env`)
 - `timeago` 3.7.0 — formato de fechas relativas
+- **iOS deps**: Swift Package Manager (desde Flutter 3.44). CocoaPods fue retirado del proyecto; no correr `pod install`. En Xcode abrir siempre `ios/Runner.xcworkspace` (nunca `Runner.xcodeproj` directo): hay dos `Package.resolved` versionados (workspace y proyecto) y abrir el `.xcodeproj` los haría divergir.
+- **FVM**: `fvm install` tras clonar instala la versión de `.fvmrc`. `flutter` sin `fvm` usa el global de la máquina y puede no coincidir.
 
 ---
 
@@ -159,7 +161,12 @@ Directorio: `functions/` (Node.js 22). Despliegue en `southamerica-west1`.
 | `updateNotificationStatus` | `exchanges/{id}` onUpdate | Cascada de cancelaciones, cierre de exchanges padres, push de cambio de estado |
 | `sendMessageNotification` | `notifications/{id}` onCreate | Push para nuevos mensajes |
 
-> Importante: la creación de `notifications/*` es **server-side**. La app cliente solo lee — no escribe en `notifications/`. Esto evita duplicados.
+> Importante: las notificaciones de intercambios (`exchange_*`) las crean las Cloud Functions. La excepción son los mensajes de chat: la app crea el documento `notifications/*` con `type: new_message` y `sendMessageNotification` envía el push (ignora los demás tipos para no duplicar).
+
+### Reglas de seguridad
+
+- **Storage**: versionadas en `storage.rules` y registradas en `firebase.json`. Solo `items/{uid}/{archivo}`: lectura con sesión, escritura y borrado solo del dueño (imágenes, < 10 MB). Desplegar con `firebase deploy --only storage`. Las reglas de "modo de prueba" con fecha de vencimiento rompieron las subidas en producción desde el 2026-06-02 hasta el 2026-10-01: no volver a usarlas.
+- **Firestore**: las reglas desplegadas **no** están en el repo y son amplias (cualquier usuario con sesión lee y escribe todo salvo `items`, cuya lectura es pública). Pendiente versionarlas y restringirlas.
 
 ---
 
@@ -206,11 +213,13 @@ Servicio: `lib/core/services/push_notification_service.dart` (singleton).
 ## Comandos comunes
 
 ```bash
-flutter pub get                     # instalar deps tras cambios en pubspec
-flutter analyze                     # linter — debe pasar limpio antes de PR
-flutter run                         # debug en device/emulator conectado
-flutter build appbundle --release   # AAB de producción (Android)
-flutter clean                       # limpia caches si pub get da problemas
+fvm flutter pub get                 # instalar deps tras cambios en pubspec (fvm resuelve a .fvm/flutter_sdk)
+fvm flutter analyze                 # linter — línea base: 27 avisos info preexistentes, 0 errores
+fvm flutter test test/exchange_cancellation_logic_test.dart test/exchange_model_test.dart test/exchange_status_test.dart
+fvm flutter run                     # debug en device/emulator conectado
+fvm flutter build appbundle --release   # AAB de producción (Android)
+fvm flutter build ios --release     # iOS (SwiftPM; ya no hay Podfile ni pod install)
+fvm flutter clean                   # limpia caches si pub get da problemas
 
 # Firebase Analytics DebugView (Android)
 adb shell setprop debug.firebase.analytics.app com.truequeapp.truequeapp
@@ -228,7 +237,7 @@ firebase functions:log --only sendExchangeNotification
 - **Regla dura**: `versionCode` (parte `+N`) **siempre incrementa**, jamás se repite ni decrece — Play Console lo rechaza.
 - Patch bump (1.0.x) = fixes / cambios invisibles para el usuario.
 - Minor bump (1.x.0) = features visibles nuevas.
-- Track actual: Producción **en revisión**, Open Testing en Colombia/Ecuador/Perú.
+- Track actual: Producción **publicada**, Open Testing en Colombia/Ecuador/Perú.
 - Signing: `android/app/upload-keystore.jks` + `key.properties` (NO está en git).
 
 ### Declaraciones obligatorias en Play Console

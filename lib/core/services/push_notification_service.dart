@@ -53,9 +53,36 @@ class PushNotificationService {
       sound: true,
     );
 
-    // Get FCM token
-    _fcmToken = await _firebaseMessaging.getToken();
-    debugPrint('FCM Token: $_fcmToken');
+    // Get FCM token.
+    // On iOS/macOS, the FCM token is derived from the native APNs device
+    // token, which arrives asynchronously after permission is granted (it
+    // is NOT guaranteed to be ready immediately, and may never arrive on
+    // the iOS Simulator). Calling getToken() before it's set throws
+    // `apns-token-not-set`. We wait for it with a bounded retry, and never
+    // let a failure here block app startup (DI awaits this service).
+    try {
+      var canFetchToken = true;
+      if (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS) {
+        String? apnsToken = await _firebaseMessaging.getAPNSToken();
+        var attempts = 0;
+        while (apnsToken == null && attempts < 10) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          apnsToken = await _firebaseMessaging.getAPNSToken();
+          attempts++;
+        }
+        canFetchToken = apnsToken != null;
+        if (!canFetchToken) {
+          debugPrint('APNS token unavailable after waiting; skipping FCM token fetch.');
+        }
+      }
+      if (canFetchToken) {
+        _fcmToken = await _firebaseMessaging.getToken();
+        debugPrint('FCM Token: $_fcmToken');
+      }
+    } catch (e) {
+      debugPrint('Error getting FCM token: $e');
+    }
     
     // Listen for token refresh
     _firebaseMessaging.onTokenRefresh.listen((token) async {

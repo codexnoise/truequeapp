@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) >= 3.10.0
-- [Dart SDK](https://dart.dev/get-dart) >= 3.10.0
+- [FVM](https://fvm.app/) to install the pinned Flutter SDK (3.44.9, see `.fvmrc`; bundles Dart 3.12)
+- Xcode 16 or newer for iOS. iOS dependencies use Swift Package Manager; CocoaPods is not used.
 - [Node.js](https://nodejs.org/) >= 18 (for Firebase Functions)
 - [Firebase CLI](https://firebase.google.com/docs/cli) (`npm install -g firebase-tools`)
 - Android Studio or Xcode (for device emulation)
@@ -23,11 +23,14 @@ git clone <repository-url>
 cd truequeapp
 ```
 
-### 2. Install Flutter dependencies
+### 2. Install the pinned Flutter SDK and dependencies
 
 ```bash
-flutter pub get
+fvm install
+fvm flutter pub get
 ```
+
+On iOS there is no `pod install` step: `fvm flutter run` resolves the Swift packages. In Xcode, always open `ios/Runner.xcworkspace`.
 
 ### 3. Install Firebase Functions dependencies
 
@@ -78,14 +81,14 @@ FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
 ### 6. Run the app
 
 ```bash
-flutter run
+fvm flutter run
 ```
 
 To run on a specific device:
 
 ```bash
-flutter devices          # List available devices
-flutter run -d <device-id>
+fvm flutter devices          # List available devices
+fvm flutter run -d <device-id>
 ```
 
 ## Environment Setup
@@ -122,7 +125,7 @@ npx firebase-tools deploy --only functions --project <your-project-id>
 ### Android (App Bundle for Google Play)
 
 ```bash
-flutter build appbundle
+fvm flutter build appbundle
 ```
 
 Output: `build/app/outputs/bundle/release/app-release.aab`
@@ -130,28 +133,28 @@ Output: `build/app/outputs/bundle/release/app-release.aab`
 ### Android (APK)
 
 ```bash
-flutter build apk --release
+fvm flutter build apk --release
 ```
 
 ### iOS
 
 ```bash
-flutter build ipa
+fvm flutter build ipa
 ```
 
 ## Running Tests
 
 ```bash
-flutter test
+fvm flutter test
 ```
 
 ## Useful Commands
 
 | Command | Description |
 |---|---|
-| `flutter pub get` | Install dependencies |
-| `flutter clean` | Clear build cache |
-| `flutter analyze` | Run static analysis |
-| `flutter run --release` | Run in release mode |
-| `flutter build appbundle` | Build Android App Bundle |
+| `fvm flutter pub get` | Install dependencies |
+| `fvm flutter clean` | Clear build cache |
+| `fvm flutter analyze` | Run static analysis |
+| `fvm flutter run --release` | Run in release mode |
+| `fvm flutter build appbundle` | Build Android App Bundle |
 | `npx firebase-tools functions:log --project <id>` | View Cloud Functions logs |
