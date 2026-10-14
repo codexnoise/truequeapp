@@ -996,10 +996,16 @@ exports.notifyNewItem = onDocumentCreated(
         if (code === 'messaging/registration-token-not-registered' ||
             code === 'messaging/invalid-registration-token') {
           try {
-            await admin.firestore().collection('users').doc(chunk[j].uid).update({
-              fcmToken: admin.firestore.FieldValue.delete(),
+            // Only delete if the stored token is still the stale one (the user
+            // may have refreshed it while we were sending).
+            const userRef = admin.firestore().collection('users').doc(chunk[j].uid);
+            const removed = await admin.firestore().runTransaction(async (tx) => {
+              const snap = await tx.get(userRef);
+              if (!snap.exists || snap.get('fcmToken') !== chunk[j].token) return false;
+              tx.update(userRef, { fcmToken: admin.firestore.FieldValue.delete() });
+              return true;
             });
-            cleaned++;
+            if (removed) cleaned++;
           } catch (cleanupError) {
             console.error('Error cleaning up stale token:', cleanupError);
           }

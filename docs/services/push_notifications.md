@@ -113,7 +113,7 @@ android.enableJetifier=true
 
 ### Canal de notificaciones Android
 
-Los canales `exchange_requests` y `new_items` ("Artículos nuevos") se crean en `initialize()`. Los detalles de `exchange_requests` en `_showLocalNotification()`:
+Los canales `exchange_requests` y `new_items` ("Artículos nuevos") se crean en `initialize()`. Los detalles de `exchange_requests` están en la constante `_exchangeChannel` (antes vivían en `_showLocalNotification()`):
 
 ```dart
 AndroidNotificationDetails(

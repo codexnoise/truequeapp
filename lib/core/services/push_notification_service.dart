@@ -48,7 +48,7 @@ class PushNotificationService {
     priority: Priority.high,
   );
 
-  /// Data of the push that launched the app from terminated state; handled
+  /// Data of the push that launched the app from terminated state;
   /// consumed by HomePage once the user is authenticated and on /home.
   Map<String, dynamic>? _pendingLaunchData;
 
@@ -265,7 +265,8 @@ class PushNotificationService {
       final context = navigatorKey.currentContext;
       if (context == null || !context.mounted) return;
 
-      if (item == null) {
+      // Same filter as the Home list: only available items can be opened.
+      if (item == null || item.status != 'available') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('El artículo ya no está disponible')),
         );
