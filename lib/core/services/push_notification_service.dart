@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import '../di/injection_container.dart';
 import '../router/app_router.dart';
+import '../../features/home/domain/repositories/home_repository.dart';
 
 class PushNotificationService {
   static final PushNotificationService _instance = PushNotificationService._internal();
@@ -20,6 +23,26 @@ class PushNotificationService {
   String? get fcmToken => _fcmToken;
 
   String? _currentUserId;
+
+  static const _exchangeChannel = AndroidNotificationDetails(
+    'exchange_requests',
+    'Exchange Requests',
+    channelDescription: 'Notifications for exchange requests and updates',
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+
+  static const _newItemsChannel = AndroidNotificationDetails(
+    'new_items',
+    'Artículos nuevos',
+    channelDescription: 'Avisos cuando alguien publica un artículo',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  /// Data of the push that launched the app from terminated state; handled
+  /// once the user is authenticated (see saveUserToken).
+  Map<String, dynamic>? _pendingLaunchData;
 
   Future<void> initialize() async {
     // Initialize local notifications
@@ -42,6 +65,16 @@ class PushNotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
+
+    // Dedicated Android channel so users can mute new-item pushes in system settings.
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          'new_items',
+          'Artículos nuevos',
+          description: 'Avisos cuando alguien publica un artículo',
+          importance: Importance.high,
+        ));
 
     // Request permission for iOS
     await _requestPermission();
@@ -98,6 +131,12 @@ class PushNotificationService {
     
     // Handle message when app is opened from notification
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+
+    // App launched from terminated state by tapping a push.
+    final initialMessage = await _firebaseMessaging.getInitialMessage();
+    if (initialMessage != null) {
+      _pendingLaunchData = Map<String, dynamic>.from(initialMessage.data);
+    }
   }
 
   Future<void> _requestPermission() async {
@@ -133,14 +172,7 @@ class PushNotificationService {
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'exchange_requests',
-      'Exchange Requests',
-      channelDescription: 'Notifications for exchange requests and updates',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    final isNewItem = message.data['type'] == 'new_item';
 
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
         DarwinNotificationDetails(
@@ -149,8 +181,8 @@ class PushNotificationService {
       presentSound: true,
     );
 
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
+    final NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: isNewItem ? _newItemsChannel : _exchangeChannel,
       iOS: iOSPlatformChannelSpecifics,
     );
 
@@ -165,40 +197,52 @@ class PushNotificationService {
 
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.messageId}');
-    final exchangeId = message.data['exchangeId'] as String?;
-    final type = message.data['type'] as String?;
-
-    // The notifications collection is populated server-side; just navigate.
-    if (exchangeId != null) {
-      if (type == 'new_message') {
-        _navigateToChat(exchangeId, message.data);
-      } else {
-        _navigateToExchangeDetail(exchangeId);
-      }
-    }
+    _handleNotificationData(Map<String, dynamic>.from(message.data));
   }
 
   void _onNotificationTapped(NotificationResponse notificationResponse) {
     debugPrint('Notification tapped: ${notificationResponse.payload}');
     final payload = notificationResponse.payload;
-
-    if (payload != null) {
-      try {
-        final data = Map<String, dynamic>.from(jsonDecode(payload) as Map);
-        final exchangeId = data['exchangeId'] as String?;
-        final type = data['type'] as String?;
-
-        if (exchangeId != null) {
-          if (type == 'new_message') {
-            _navigateToChat(exchangeId, data);
-          } else {
-            _navigateToExchangeDetail(exchangeId);
-          }
-        }
-      } catch (e) {
-        debugPrint('Error parsing notification payload: $e');
-      }
+    if (payload == null) return;
+    try {
+      _handleNotificationData(Map<String, dynamic>.from(jsonDecode(payload) as Map));
+    } catch (e) {
+      debugPrint('Error parsing notification payload: $e');
     }
+  }
+
+  /// Routes a notification tap by its data payload.
+  void _handleNotificationData(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+
+    if (type == 'new_item') {
+      final itemId = data['itemId'] as String?;
+      if (itemId != null) _navigateToItemDetail(itemId);
+      return;
+    }
+
+    // The notifications collection is populated server-side; just navigate.
+    final exchangeId = data['exchangeId'] as String?;
+    if (exchangeId == null) return;
+    if (type == 'new_message') {
+      _navigateToChat(exchangeId, data);
+    } else {
+      _navigateToExchangeDetail(exchangeId);
+    }
+  }
+
+  Future<void> _navigateToItemDetail(String itemId) async {
+    final item = await sl<HomeRepository>().getItemById(itemId);
+    final context = navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+
+    if (item == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El artículo ya no está disponible')),
+      );
+      return;
+    }
+    context.pushNamed('item-detail', extra: item);
   }
 
   void _navigateToExchangeDetail(String exchangeId) {
@@ -223,6 +267,7 @@ class PushNotificationService {
 
 
   Future<void> saveUserToken(String userId) async {
+    _consumePendingLaunchData();
     if (_fcmToken == null) return;
     
     _currentUserId = userId;
@@ -236,6 +281,17 @@ class PushNotificationService {
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
     }
+  }
+
+  /// Navigates for the push that launched the app, once auth is restored and
+  /// the router has settled on /home (saveUserToken runs right after login).
+  void _consumePendingLaunchData() {
+    final data = _pendingLaunchData;
+    if (data == null) return;
+    _pendingLaunchData = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () => _handleNotificationData(data));
+    });
   }
 
   Future<void> removeUserToken(String userId) async {
