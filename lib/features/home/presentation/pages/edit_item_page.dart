@@ -105,6 +105,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
         imageUrls: [], // Handled by repository
         desiredItem: _isFree ? 'Donation' : _desiredItemController.text.trim(),
         status: widget.item.status,
+        createdAt: widget.item.createdAt,
       );
 
       ref.read(updateItemProvider.notifier).updateItem(

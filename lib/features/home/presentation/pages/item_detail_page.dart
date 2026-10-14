@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/exchange_provider.dart';
@@ -419,6 +420,15 @@ class _ItemDetailPageState extends ConsumerState<ItemDetailPage> {
                   const Text("DESCRIPCIÓN", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 8),
                   Text(widget.item.description),
+                  if (widget.item.createdAt != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Publicado ${timeago.format(widget.item.createdAt!, locale: 'es')}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),
