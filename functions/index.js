@@ -536,7 +536,6 @@ exports.sendMessageNotification = onDocumentCreated(
     const exchangeId = notification.exchangeId;
 
     try {
-
       if (!userId || !exchangeId) {
         console.log('Missing userId or exchangeId in notification');
         return null;
@@ -974,10 +973,17 @@ exports.notifyNewItem = onDocumentCreated(
 
     for (let i = 0; i < recipients.length; i += 500) {
       const chunk = recipients.slice(i, i + 500);
-      const response = await admin.messaging().sendEachForMulticast({
-        ...baseMessage,
-        tokens: chunk.map(r => r.token),
-      });
+      let response;
+      try {
+        response = await admin.messaging().sendEachForMulticast({
+          ...baseMessage,
+          tokens: chunk.map(r => r.token),
+        });
+      } catch (batchError) {
+        console.error(`notifyNewItem: batch ${i / 500} failed:`, batchError);
+        fail += chunk.length;
+        continue;
+      }
 
       for (let j = 0; j < response.responses.length; j++) {
         const result = response.responses[j];

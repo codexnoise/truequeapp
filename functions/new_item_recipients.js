@@ -42,10 +42,20 @@ function selectNewItemRecipients(users, authorId) {
  */
 function buildNewItemText(item) {
   const category = CATEGORY_NAMES[item.categoryId] || 'General';
-  const wanted = item.desiredItem === 'Donation' ? 'Donación' : `Busca: ${item.desiredItem}`;
+  let itemTitle = typeof item.title === 'string' ? item.title.trim() : '';
+  if (itemTitle.length > 100) {
+    itemTitle = itemTitle.slice(0, 99) + '…';
+  }
+  const desired = typeof item.desiredItem === 'string' ? item.desiredItem.trim() : '';
+  let body = category;
+  if (desired === 'Donation') {
+    body = `${category} · Donación`;
+  } else if (desired) {
+    body = `${category} · Busca: ${desired}`;
+  }
   return {
-    title: `Nuevo artículo: ${item.title}`,
-    body: `${category} · ${wanted}`,
+    title: itemTitle ? `Nuevo artículo: ${itemTitle}` : 'Nuevo artículo',
+    body,
   };
 }
 

@@ -95,6 +95,44 @@ test('categoría desconocida cae en General', () => {
   );
 });
 
+test('título ausente o vacío: "Nuevo artículo" sin dos puntos', () => {
+  assert.deepStrictEqual(
+    buildNewItemText({ categoryId: 'tech', desiredItem: 'Y' }),
+    { title: 'Nuevo artículo', body: 'Tecnología · Busca: Y' },
+  );
+  assert.strictEqual(
+    buildNewItemText({ title: '   ', categoryId: 'tech', desiredItem: 'Y' }).title,
+    'Nuevo artículo',
+  );
+});
+
+test('desiredItem ausente o en blanco: body solo la categoría', () => {
+  assert.strictEqual(
+    buildNewItemText({ title: 'X', categoryId: 'books' }).body,
+    'Libros',
+  );
+  assert.strictEqual(
+    buildNewItemText({ title: 'X', categoryId: 'books', desiredItem: '  ' }).body,
+    'Libros',
+  );
+});
+
+test('recorta espacios en título y desiredItem', () => {
+  assert.deepStrictEqual(
+    buildNewItemText({ title: '  Cámara ', categoryId: 'tech', desiredItem: ' Un libro ' }),
+    { title: 'Nuevo artículo: Cámara', body: 'Tecnología · Busca: Un libro' },
+  );
+});
+
+test('título largo se trunca a 100 caracteres terminando en …', () => {
+  const t = buildNewItemText({ title: 'a'.repeat(150), categoryId: 'tech', desiredItem: 'Y' });
+  const itemTitle = t.title.slice('Nuevo artículo: '.length);
+  assert.strictEqual(itemTitle.length, 100);
+  assert.ok(itemTitle.endsWith('…'));
+  const exact = buildNewItemText({ title: 'a'.repeat(100), categoryId: 'tech', desiredItem: 'Y' });
+  assert.strictEqual(exact.title, 'Nuevo artículo: ' + 'a'.repeat(100));
+});
+
 console.log('\n' + '='.repeat(60));
 console.log(`\n📊 Results: ${passed} passed, ${failed} failed, ${passed + failed} total\n`);
 if (failures.length > 0) {
