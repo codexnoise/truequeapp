@@ -4,7 +4,7 @@ App Flutter de **trueque y donación** entre particulares. Permite publicar art�
 
 - **Mercado objetivo**: Colombia, Ecuador, Perú (Spanish-speaking LATAM)
 - **App ID Android**: `com.truequeapp.truequeapp`
-- **Firebase project**: `truequeapp-c2f82` (región funciones: `us-central1`)
+- **Firebase project**: `truequeapp-c2f82` (funciones: `us-central1`, salvo `notifyNewItem` en `southamerica-west1`; Firestore está en `southamerica-west1`)
 - **Estado actual**: publicada en Producción en Play Store (Android). iOS aún no está en App Store.
 
 ---
@@ -153,7 +153,7 @@ También: `cancelled` (con `cancelledReason`: `item_no_longer_available`, `item_
 
 ## Backend: Cloud Functions
 
-Directorio: `functions/` (Node.js 22). Despliegue en `us-central1` (región por defecto; el código no fija región).
+Directorio: `functions/` (Node.js 22). El código no fija región. Las funciones creadas antes de 2026-10 viven en `us-central1` con el trigger en `southamerica-west1` (región de Firestore). `notifyNewItem` (creada el 2026-10-14) la ubicó el CLI en `southamerica-west1`, junto a Firestore. Una función ya desplegada no cambia de región al redesplegarla.
 
 | Función | Trigger | Propósito |
 |---|---|---|
