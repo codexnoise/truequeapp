@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Cloud Storage for Firebase: truequeapp-c2f82.firebasestorage.app
+// La app solo usa items/{uid}/{archivo} (lib/core/services/storage_service.dart).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Imágenes de artículos: lectura solo con sesión, escritura solo del dueño.
+    // La app muestra las imágenes con URLs de descarga con token, que no pasan por estas reglas.
+    match /items/{userId}/{fileName} {
+      allow read: if request.auth != null;
+
+      // Subida: solo el propio usuario, solo imágenes, máximo 10 MB.
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.contentType.matches('image/.*')
+                            && request.resource.size < 10 * 1024 * 1024;
+
+      // Borrado al editar o eliminar un artículo: solo el dueño.
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Todo lo demás queda denegado por defecto.
+  }
+}
