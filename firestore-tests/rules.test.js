@@ -66,10 +66,12 @@ describe('users', () => {
   test('rechaza: leer un perfil sin sesión', async () => {
     await assertFails(getDoc(doc(db(null), 'users', A)));
   });
-  test('rechaza: buscar usuarios por teléfono (con o sin sesión)', async () => {
-    await assertFails(getDocs(query(collection(db(null), 'users'),
+  test('permite (transitorio): buscar por teléfono con sesión y limit 1', async () => {
+    await assertSucceeds(getDocs(query(collection(db(A), 'users'),
       where('phoneNumber', '==', '+5935'), limit(1))));
-    await assertFails(getDocs(query(collection(db(A), 'users'),
+  });
+  test('rechaza: buscar por teléfono sin sesión', async () => {
+    await assertFails(getDocs(query(collection(db(null), 'users'),
       where('phoneNumber', '==', '+5935'), limit(1))));
   });
   test('rechaza: listar todos los usuarios', async () => {

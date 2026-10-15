@@ -29,10 +29,11 @@ service cloud.firestore {
       // Nombre y email del otro participante (detalle de intercambio, chat, campana).
       allow get: if signedIn();
 
-      // Nadie lista usuarios. "Buscar email por teléfono" (recuperación, sin sesión)
-      // ya fallaba con las reglas anteriores; abrirlo expondría email, teléfono y
-      // token de todos. Si se quiere esa función, hacerla con una Cloud Function.
-      allow list: if false;
+      // TRANSITORIO: "Buscar mi correo" (recuperación) consulta
+      // where('phoneNumber', ==).limit(1). Funciona porque logout() no cierra la
+      // sesión de Firebase. Cerrar (allow list: if false) cuando la app use la
+      // Cloud Function findEmailByPhone y la mayoría haya actualizado.
+      allow list: if signedIn() && request.query.limit <= 1;
 
       // Registro: corre antes de verificar el email.
       allow create: if isUser(uid) && request.resource.data.uid == uid;
