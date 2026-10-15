@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
@@ -21,6 +23,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   String _searchQuery = '';
   String? _selectedCategory;
   bool _showOnlyFreeItems = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Handle the notification that launched the app (if any) now that the
+    // user is authenticated and on /home, past the splash redirect.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sl<PushNotificationService>().consumePendingLaunchData();
+    });
+  }
 
   void _onItemTapped(int index) {
     if (index == _currentIndex) return;

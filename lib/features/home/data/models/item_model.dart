@@ -11,13 +11,16 @@ class ItemModel extends ItemEntity {
     required super.imageUrls,
     required super.desiredItem,
     required super.status,
-    super.acquisitionDate,
+    super.createdAt,
   });
 
   factory ItemModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    return ItemModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+  }
+
+  factory ItemModel.fromMap(String id, Map<String, dynamic> data) {
     return ItemModel(
-      id: doc.id,
+      id: id,
       ownerId: data['ownerId'] ?? '',
       title: data['title'] ?? '',
       description: data['description'] ?? '',
@@ -25,7 +28,7 @@ class ItemModel extends ItemEntity {
       imageUrls: List<String>.from(data['imageUrls'] ?? []),
       desiredItem: data['desiredItem'] ?? '',
       status: data['status'] ?? 'available',
-      acquisitionDate: (data['acquisitionDate'] as Timestamp?)?.toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -39,7 +42,7 @@ class ItemModel extends ItemEntity {
       imageUrls: entity.imageUrls,
       desiredItem: entity.desiredItem,
       status: entity.status,
-      acquisitionDate: entity.acquisitionDate,
+      createdAt: entity.createdAt,
     );
   }
 
@@ -47,7 +50,6 @@ class ItemModel extends ItemEntity {
     String? id,
     List<String>? imageUrls,
     String? status,
-    DateTime? acquisitionDate,
   }) {
     return ItemModel(
       id: id ?? this.id,
@@ -58,10 +60,12 @@ class ItemModel extends ItemEntity {
       imageUrls: imageUrls ?? this.imageUrls,
       desiredItem: desiredItem,
       status: status ?? this.status,
-      acquisitionDate: acquisitionDate ?? this.acquisitionDate,
+      createdAt: createdAt,
     );
   }
 
+  /// Fields shared by create and update. `createdAt` is written only on
+  /// create (see HomeRepositoryImpl.addItem) so edits never overwrite it.
   Map<String, dynamic> toFirestore() {
     return {
       'ownerId': ownerId,
@@ -71,9 +75,6 @@ class ItemModel extends ItemEntity {
       'imageUrls': imageUrls,
       'desiredItem': desiredItem,
       'status': status,
-      'acquisitionDate':
-          acquisitionDate != null ? Timestamp.fromDate(acquisitionDate!) : null,
-      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 }

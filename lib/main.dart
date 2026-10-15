@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'core/di/injection_container.dart' as di;
 import 'core/router/app_router.dart';
@@ -20,6 +21,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   // Ensure Flutter bindings are initialized before any asynchronous task
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Spanish relative times ("hace 3 días") for timeago.format(..., locale: 'es')
+  timeago.setLocaleMessages('es', timeago.EsMessages());
 
   // Load environment variables before any service initialization
   await dotenv.load(fileName: '.env');

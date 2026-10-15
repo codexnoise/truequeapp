@@ -10,6 +10,7 @@ abstract class AuthRemoteDataSource {
   Stream<UserModel?> get userStream;
   Future<UserModel?> getProfile(String uid);
   Future<void> updateProfile(String uid, {String? name, String? phoneNumber});
+  Future<void> updateNotifyNewItems(String uid, bool value);
   Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> sendPasswordResetEmail(String email);
   Future<String?> findEmailByPhone(String phoneNumber);
@@ -114,6 +115,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (e) {
       throw Exception("Update Profile Error: ${e.toString()}");
+    }
+  }
+
+  @override
+  Future<void> updateNotifyNewItems(String uid, bool value) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .set({'notifyNewItems': value}, SetOptions(merge: true));
+    } catch (e) {
+      throw Exception("Update Notification Preference Error: ${e.toString()}");
     }
   }
 

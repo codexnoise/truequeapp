@@ -4,6 +4,8 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+const { selectNewItemRecipients, buildNewItemText } = require('./new_item_recipients');
+
 async function createInAppNotification({ userId, exchangeId, type, title, body, senderId, senderName }) {
   if (!userId || !type || !title) return null;
   try {
@@ -529,10 +531,11 @@ exports.sendMessageNotification = onDocumentCreated(
       return null;
     }
 
-    try {
-      const userId = notification.userId;
-      const exchangeId = notification.exchangeId;
+    // Declared outside the try so the catch block can clean up stale tokens.
+    const userId = notification.userId;
+    const exchangeId = notification.exchangeId;
 
+    try {
       if (!userId || !exchangeId) {
         console.log('Missing userId or exchangeId in notification');
         return null;
@@ -927,5 +930,93 @@ exports.deleteUserAccount = onCall(
     console.log('Firebase Auth account deleted');
 
     return { success: true };
+  }
+);
+
+// Push "new item" to every user except the author (and users who opted out).
+exports.notifyNewItem = onDocumentCreated(
+  'items/{itemId}',
+  async (event) => {
+    const itemId = event.params.itemId;
+    const item = event.data && event.data.data();
+    if (!item || item.status !== 'available') {
+      return null;
+    }
+
+    const usersSnapshot = await admin.firestore().collection('users').get();
+    const users = usersSnapshot.docs.map(doc => ({
+      uid: doc.id,
+      fcmToken: doc.data().fcmToken,
+      notifyNewItems: doc.data().notifyNewItems,
+    }));
+
+    const recipients = selectNewItemRecipients(users, item.ownerId);
+    if (recipients.length === 0) {
+      console.log(`notifyNewItem: item ${itemId} → 0 destinatarios`);
+      return null;
+    }
+
+    const { title, body } = buildNewItemText(item);
+    const baseMessage = {
+      notification: { title, body },
+      data: { type: 'new_item', itemId },
+      android: {
+        priority: 'high',
+        notification: { channelId: 'new_items', sound: 'default' },
+      },
+      apns: { payload: { aps: { sound: 'default' } } },
+    };
+
+    let ok = 0;
+    let fail = 0;
+    let cleaned = 0;
+
+    for (let i = 0; i < recipients.length; i += 500) {
+      const chunk = recipients.slice(i, i + 500);
+      let response;
+      try {
+        response = await admin.messaging().sendEachForMulticast({
+          ...baseMessage,
+          tokens: chunk.map(r => r.token),
+        });
+      } catch (batchError) {
+        console.error(`notifyNewItem: batch ${i / 500} failed:`, batchError);
+        fail += chunk.length;
+        continue;
+      }
+
+      for (let j = 0; j < response.responses.length; j++) {
+        const result = response.responses[j];
+        if (result.success) {
+          ok++;
+          continue;
+        }
+        fail++;
+        const code = result.error && result.error.code;
+        if (code === 'messaging/registration-token-not-registered' ||
+            code === 'messaging/invalid-registration-token') {
+          try {
+            // Only delete if the stored token is still the stale one (the user
+            // may have refreshed it while we were sending).
+            const userRef = admin.firestore().collection('users').doc(chunk[j].uid);
+            const removed = await admin.firestore().runTransaction(async (tx) => {
+              const snap = await tx.get(userRef);
+              if (!snap.exists || snap.get('fcmToken') !== chunk[j].token) return false;
+              tx.update(userRef, { fcmToken: admin.firestore.FieldValue.delete() });
+              return true;
+            });
+            if (removed) cleaned++;
+          } catch (cleanupError) {
+            console.error('Error cleaning up stale token:', cleanupError);
+          }
+        }
+      }
+    }
+
+    console.log(
+      `notifyNewItem: item ${itemId} → ${recipients.length} destinatarios, ` +
+      `${ok} ok, ${fail} fallidos, ${cleaned} tokens limpiados`,
+    );
+    return null;
   }
 );

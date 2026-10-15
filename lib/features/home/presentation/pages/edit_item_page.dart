@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/delete_item_provider.dart';
 import '../providers/update_item_provider.dart';
-import '../widgets/acquisition_date_field.dart';
 import '../widgets/image_source_picker.dart';
 
 class EditItemPage extends ConsumerStatefulWidget {
@@ -23,7 +22,6 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
   late TextEditingController _descriptionController;
   late TextEditingController _desiredItemController;
   bool _isFree = false;
-  DateTime? _acquisitionDate;
 
   late List<String> _existingImageUrls;
   final List<String> _removedImageUrls = [];
@@ -40,7 +38,6 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
       text: _isFree ? 'Es una donación' : widget.item.desiredItem,
     );
     _existingImageUrls = List.from(widget.item.imageUrls);
-    _acquisitionDate = widget.item.acquisitionDate;
   }
 
   @override
@@ -108,7 +105,7 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
         imageUrls: [], // Handled by repository
         desiredItem: _isFree ? 'Donation' : _desiredItemController.text.trim(),
         status: widget.item.status,
-        acquisitionDate: _acquisitionDate,
+        createdAt: widget.item.createdAt,
       );
 
       ref.read(updateItemProvider.notifier).updateItem(
@@ -275,11 +272,6 @@ class _EditItemPageState extends ConsumerState<EditItemPage> {
                 validator: (value) => value == null || value.isEmpty ? 'La descripción es requerida' : null,
               ),
               const SizedBox(height: 20),
-              AcquisitionDateField(
-                value: _acquisitionDate,
-                onChanged: (d) => setState(() => _acquisitionDate = d),
-                onClear: () => setState(() => _acquisitionDate = null),
-              ),
               CheckboxListTile(
                 title: const Text("Es una donación (gratis)"),
                 value: _isFree,

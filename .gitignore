@@ -107,3 +107,6 @@ Desktop.ini
 
 # FVM (machine-local SDK symlinks/cache; pinned version lives in .fvmrc)
 .fvm/
+
+# Specs y planes de trabajo (Claude/superpowers): solo locales, nunca se commitean
+docs/superpowers/

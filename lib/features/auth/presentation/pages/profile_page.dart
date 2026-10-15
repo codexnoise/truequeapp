@@ -70,6 +70,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return null;
   }
 
+  Future<void> _toggleNotifyNewItems(bool value) async {
+    final authState = ref.read(authProvider);
+    if (authState is! AuthAuthenticated) return;
+    try {
+      await ref.read(profileProvider.notifier).setNotifyNewItems(authState.user.uid, value);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo guardar la preferencia')),
+      );
+    }
+  }
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -309,6 +322,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
+    final switchUser = switch (state) {
+      ProfileLoaded(:final user) => user,
+      ProfileSaving(:final user) => user,
+      _ => null,
+    };
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -451,6 +470,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 );
               },
             ),
+            if (switchUser != null)
+              SwitchListTile(
+                title: const Text('Avisarme de artículos nuevos'),
+                subtitle: const Text('Recibir una notificación cuando alguien publique'),
+                value: switchUser.notifyNewItems,
+                activeTrackColor: colorScheme.primary,
+                onChanged: state is ProfileSaving ? null : _toggleNotifyNewItems,
+              ),
             ListTile(
               leading: Icon(Icons.lock_outline, color: colorScheme.onSurface),
               title: const Text('Cambiar contraseña'),

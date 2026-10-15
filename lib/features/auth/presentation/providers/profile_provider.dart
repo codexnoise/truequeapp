@@ -57,6 +57,22 @@ class ProfileNotifier extends Notifier<ProfileState> {
     }
   }
 
+  /// Optimistic toggle; reverts and rethrows if the write fails.
+  Future<void> setNotifyNewItems(String uid, bool value) async {
+    final current = state;
+    if (current is! ProfileLoaded) return;
+    state = ProfileLoaded(current.user.copyWith(notifyNewItems: value));
+    try {
+      await sl<AuthRepository>().updateNotifyNewItems(uid, value);
+    } catch (e) {
+      final s = state;
+      if (s is ProfileLoaded && s.user.notifyNewItems == value) {
+        state = ProfileLoaded(s.user.copyWith(notifyNewItems: !value));
+      }
+      rethrow;
+    }
+  }
+
   Future<void> changePassword(String currentPassword, String newPassword) async {
     await sl<AuthRepository>().changePassword(currentPassword, newPassword);
   }

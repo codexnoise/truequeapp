@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/item_entity.dart';
 import '../providers/add_item_provider.dart';
-import '../widgets/acquisition_date_field.dart';
 import '../widgets/category_constants.dart';
 import '../widgets/image_source_picker.dart';
 
@@ -22,7 +21,6 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
   final _picker = ImagePicker();
   String _selectedCategory = 'general';
   bool _isFree = false;
-  DateTime? _acquisitionDate;
 
   final _titleController = TextEditingController();
   final _lookingForController = TextEditingController();
@@ -83,7 +81,6 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
         imageUrls: [],
         desiredItem: _isFree ? 'Donation' : _lookingForController.text.trim(),
         status: 'available',
-        acquisitionDate: _acquisitionDate,
       );
 
       ref.read(addItemProvider.notifier).uploadItem(newItem, _images);
@@ -152,11 +149,6 @@ class _AddItemPageState extends ConsumerState<AddItemPage> {
               ),
               _buildCategorySelector(),
               const SizedBox(height: 20),
-              AcquisitionDateField(
-                value: _acquisitionDate,
-                onChanged: (d) => setState(() => _acquisitionDate = d),
-                onClear: () => setState(() => _acquisitionDate = null),
-              ),
               CheckboxListTile(
                 title: const Text("Marcar como donación (gratis)"),
                 value: _isFree,

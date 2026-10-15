@@ -7,7 +7,7 @@ class ItemEntity {
   final List<String> imageUrls;
   final String desiredItem;
   final String status;
-  final DateTime? acquisitionDate;
+  final DateTime? createdAt;
 
   const ItemEntity({
     required this.id,
@@ -18,6 +18,6 @@ class ItemEntity {
     required this.imageUrls,
     required this.desiredItem,
     required this.status,
-    this.acquisitionDate,
+    this.createdAt,
   });
 }
