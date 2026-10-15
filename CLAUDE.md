@@ -167,7 +167,7 @@ Directorio: `functions/` (Node.js 22). El código no fija región. Las funciones
 ### Reglas de seguridad
 
 - **Storage**: versionadas en `storage.rules` y registradas en `firebase.json`. Solo `items/{uid}/{archivo}`: lectura con sesión, escritura y borrado solo del dueño (imágenes, < 10 MB). Desplegar con `firebase deploy --only storage`. Las reglas de "modo de prueba" con fecha de vencimiento rompieron las subidas en producción desde el 2026-06-02 hasta el 2026-10-01: no volver a usarlas.
-- **Firestore**: las reglas desplegadas **no** están en el repo y son amplias (cualquier usuario con sesión lee y escribe todo salvo `items`, cuya lectura es pública). Pendiente versionarlas y restringirlas.
+- **Firestore**: versionadas en `firestore.rules` (registradas en `firebase.json`). Por colección: `items` lectura pública, alta solo a nombre propio y `available`, un tercero solo puede pasar un artículo `available` a `exchanged` (aceptación de intercambio); `exchanges` y `messages` solo para los dos participantes; `notifications` solo las propias (cambiando `isRead`) y avisos de chat al otro participante; `users` lectura individual con sesión, sin listados, edición solo de campos propios. Tests en `firestore-tests/` (`npm test`, requiere Java 21: el de Android Studio sirve con `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`). Desplegar con `firebase deploy --only firestore:rules`. Al agregar un acceso nuevo en la app, agregar su regla y su test.
 
 ---
 

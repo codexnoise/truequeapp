@@ -29,10 +29,10 @@ service cloud.firestore {
       // Nombre y email del otro participante (detalle de intercambio, chat, campana).
       allow get: if signedIn();
 
-      // Recuperación de contraseña por teléfono, ANTES de iniciar sesión:
-      // where('phoneNumber', isEqualTo: x).limit(1). Las reglas no pueden exigir
-      // el filtro, solo el límite. Pendiente mover esto a una Cloud Function.
-      allow list: if request.query.limit <= 1;
+      // Nadie lista usuarios. "Buscar email por teléfono" (recuperación, sin sesión)
+      // ya fallaba con las reglas anteriores; abrirlo expondría email, teléfono y
+      // token de todos. Si se quiere esa función, hacerla con una Cloud Function.
+      allow list: if false;
 
       // Registro: corre antes de verificar el email.
       allow create: if isUser(uid) && request.resource.data.uid == uid;
