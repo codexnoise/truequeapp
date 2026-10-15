@@ -41,6 +41,11 @@ class AuthError extends AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   StreamSubscription<UserEntity?>? _userSubscription;
 
+  /// The first auth event is the session Firebase restored at app start.
+  /// Later events with a user come from login()/register(), which set the
+  /// state themselves.
+  bool _initialAuthEventHandled = false;
+
   // Notice: In Notifiers, we don't use a standard constructor for dependencies.
   // We initialize the state in the build() method.
   @override
@@ -56,6 +61,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   void _listenToAuthState() {
     _userSubscription = sl<AuthRepository>().currentUser.listen((user) async {
+      final isStartup = !_initialAuthEventHandled;
+      _initialAuthEventHandled = true;
+
       // Read keep_session INSIDE the listener so it always has the latest value
       final prefs = await SharedPreferences.getInstance();
       final bool keepSession = prefs.getBool('keep_session') ?? false;
@@ -70,8 +78,11 @@ class AuthNotifier extends Notifier<AuthState> {
           sl<PushNotificationService>().saveUserToken(user.uid);
         }
       } else if (user != null && !keepSession) {
-        // If there's a user but NO "remember me", we force sign out
-        logout();
+        // Restored session without "remember me": sign out of Firebase too.
+        // Only at startup — mid-session this is a login() in progress.
+        if (isStartup) {
+          await _signOut();
+        }
       } else {
         // No user in Firebase
         state = AuthInitial();
@@ -158,9 +169,19 @@ class AuthNotifier extends Notifier<AuthState> {
       await sl<PushNotificationService>().removeUserToken(currentState.user.uid);
     }
 
-    // Logic for sign out
+    await _signOut();
+  }
+
+  /// Ends the Firebase session (not just the app state), so the next person on
+  /// the device isn't still authenticated as the previous user.
+  Future<void> _signOut() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('keep_session');
+    try {
+      await sl<AuthRepository>().signOut();
+    } catch (_) {
+      // Even if Firebase fails, leave the app logged out.
+    }
     state = AuthInitial();
   }
 

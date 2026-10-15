@@ -194,24 +194,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<String?> findEmailByPhone(String phoneNumber) async {
+    // Runs before login: the Cloud Function looks the user up server-side and
+    // returns only the masked email (the client can't list users).
     try {
-      final query = await _firestore
-          .collection('users')
-          .where('phoneNumber', isEqualTo: phoneNumber)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) return null;
-
-      final email = query.docs.first.data()['email'] as String?;
-      if (email == null) return null;
-
-      final parts = email.split('@');
-      final name = parts[0];
-      final masked = name.length > 1
-          ? '${name[0]}***${name[name.length - 1]}'
-          : '${name[0]}***';
-      return '$masked@${parts[1]}';
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('findEmailByPhone')
+          .call({'phoneNumber': phoneNumber});
+      final data = Map<String, dynamic>.from(result.data as Map);
+      return data['maskedEmail'] as String?;
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception('Error al buscar cuenta: ${e.message ?? e.code}');
     } catch (e) {
       throw Exception('Error al buscar cuenta: ${e.toString()}');
     }

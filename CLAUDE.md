@@ -160,6 +160,7 @@ Directorio: `functions/` (Node.js 22). El código no fija región. Las funciones
 | `sendExchangeNotification` | `exchanges/{id}` onCreate | Push + notificación in-app a quien recibe la propuesta |
 | `updateNotificationStatus` | `exchanges/{id}` onUpdate | Cascada de cancelaciones, cierre de exchanges padres, push de cambio de estado |
 | `sendMessageNotification` | `notifications/{id}` onCreate | Push para nuevos mensajes |
+| `findEmailByPhone` | callable, **sin sesión**, `us-central1` | Pista de recuperación: devuelve solo el email enmascarado del usuario con ese teléfono (lógica pura en `functions/phone_lookup.js`). Reemplaza la consulta directa a `users` desde la app (1.1.1+) |
 | `notifyNewItem` | `items/{id}` onCreate | Push "artículo nuevo" a todos los usuarios con token, excepto el autor y quienes tengan `notifyNewItems == false` (lógica pura en `functions/new_item_recipients.js`) |
 
 > Importante: las notificaciones de intercambios (`exchange_*`) las crean las Cloud Functions. La excepción son los mensajes de chat: la app crea el documento `notifications/*` con `type: new_message` y `sendMessageNotification` envía el push (ignora los demás tipos para no duplicar).
@@ -178,7 +179,8 @@ Archivo principal: `lib/features/auth/presentation/providers/auth_provider.dart`
 - Email + password con verificación de email obligatoria.
 - `keep_session` (SharedPreferences) controla auto-login al reabrir la app.
 - Al autenticar: se llama `PushNotificationService.requestPermissionAndSaveToken(uid)` que **pide permiso de notificaciones + guarda token FCM**.
-- Al cerrar sesión: `removeUserToken(uid)` borra el token del documento del usuario.
+- Al cerrar sesión: `removeUserToken(uid)` borra el token del documento del usuario y se cierra la sesión de Firebase (`signOut`). Hasta la 1.1.0 `logout()` no llamaba a `signOut()` y Firebase seguía autenticado con el usuario anterior.
+- Sin "Mantener sesión iniciada": al abrir la app, la sesión que restaura Firebase se cierra (solo en el primer evento de `authStateChanges`; los siguientes vienen de `login()`/`register()`).
 
 **Decisión clave**: el permiso de notificaciones **no se pide al abrir la app**, solo después de login/registro exitoso. Esto se hizo para no asustar al usuario en su primer contacto. Si rechaza, en iOS y Android 13+ el SO bloquea repreguntar — no hay diálogo de fallback in-app (se evaluó y descartó por simplicidad).
 
