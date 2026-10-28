@@ -5,6 +5,7 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const { selectNewItemRecipients, buildNewItemText } = require('./new_item_recipients');
+const { maskEmail, normalizePhone } = require('./phone_lookup');
 
 async function createInAppNotification({ userId, exchangeId, type, title, body, senderId, senderName }) {
   if (!userId || !type || !title) return null;
@@ -1018,5 +1019,33 @@ exports.notifyNewItem = onDocumentCreated(
       `${ok} ok, ${fail} fallidos, ${cleaned} tokens limpiados`,
     );
     return null;
+  }
+);
+
+/**
+ * Password-recovery hint: returns the masked email linked to a phone number.
+ * Callable WITHOUT a session (the recovery screen is before login), so the app
+ * no longer needs to list `users` from the client. Only the masked email leaves
+ * the server. Region pinned to us-central1 because the app calls
+ * FirebaseFunctions.instance (default region).
+ */
+exports.findEmailByPhone = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const phone = normalizePhone(request.data && request.data.phoneNumber);
+    if (!phone) {
+      throw new HttpsError('invalid-argument', 'Número de teléfono inválido.');
+    }
+
+    const snap = await admin.firestore()
+      .collection('users')
+      .where('phoneNumber', '==', phone)
+      .limit(1)
+      .get();
+
+    if (snap.empty || snap.docs[0].get('deleted') === true) {
+      return { maskedEmail: null };
+    }
+    return { maskedEmail: maskEmail(snap.docs[0].get('email')) };
   }
 );
