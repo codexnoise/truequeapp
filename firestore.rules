@@ -1,0 +1,121 @@
+rules_version = '2';
+
+// Reglas de Firestore de TruequeApp.
+// Las Cloud Functions usan el Admin SDK y no pasan por estas reglas.
+// Tests: firestore-tests/ (npm test, corre contra el emulador).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Solo cambian las claves indicadas.
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function isPartyOf(exchange) {
+      return signedIn() &&
+        (exchange.senderId == request.auth.uid || exchange.receiverId == request.auth.uid);
+    }
+
+    // ---------------------------------------------------------------- users
+    match /users/{uid} {
+      // Nombre y email del otro participante (detalle de intercambio, chat, campana).
+      allow get: if signedIn();
+
+      // TRANSITORIO: "Buscar mi correo" (recuperación) consulta
+      // where('phoneNumber', ==).limit(1). Funciona porque logout() no cierra la
+      // sesión de Firebase. Cerrar (allow list: if false) cuando la app use la
+      // Cloud Function findEmailByPhone y la mayoría haya actualizado.
+      allow list: if signedIn() && request.query.limit <= 1;
+
+      // Registro: corre antes de verificar el email.
+      allow create: if isUser(uid) && request.resource.data.uid == uid;
+
+      allow update: if isUser(uid) && onlyChanges([
+        'name', 'phoneNumber', 'photoUrl', 'notifyNewItems', 'fcmToken', 'tokenUpdatedAt'
+      ]);
+
+      // La baja la hace la función deleteUserAccount.
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------- items
+    match /items/{itemId} {
+      allow read: if true;
+
+      allow create: if signedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.status == 'available';
+
+      // Dueño: edita todo menos el dueño.
+      // Otro usuario: solo marcar como intercambiado un artículo disponible
+      // (al aceptar un intercambio, el receptor marca también el del remitente).
+      allow update: if signedIn() && (
+        (resource.data.ownerId == request.auth.uid &&
+          request.resource.data.ownerId == resource.data.ownerId)
+        ||
+        (resource.data.status == 'available' &&
+          request.resource.data.status == 'exchanged' &&
+          onlyChanges(['status', 'updatedAt']))
+      );
+
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // ------------------------------------------------------------ exchanges
+    match /exchanges/{exchangeId} {
+      // Las consultas de la app filtran por senderId o receiverId == uid.
+      allow read: if isPartyOf(resource.data);
+
+      allow create: if signedIn() &&
+        request.resource.data.senderId == request.auth.uid &&
+        request.resource.data.receiverId != request.auth.uid &&
+        request.resource.data.status == 'pending';
+
+      // Participantes: estado y último mensaje. Las partes y artículos no cambian.
+      allow update: if isPartyOf(resource.data) && onlyChanges([
+        'status', 'updatedAt', 'lastMessage', 'lastMessageAt', 'lastMessageSenderId'
+      ]);
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isPartyOf(get(/databases/$(database)/documents/exchanges/$(exchangeId)).data);
+
+        allow create: if isPartyOf(get(/databases/$(database)/documents/exchanges/$(exchangeId)).data) &&
+          request.resource.data.senderId == request.auth.uid;
+
+        allow update, delete: if false;
+      }
+    }
+
+    // -------------------------------------------------------- notifications
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+
+      // La app solo crea avisos de chat para el otro participante del intercambio.
+      allow create: if signedIn() &&
+        request.resource.data.type == 'new_message' &&
+        request.resource.data.senderId == request.auth.uid &&
+        request.resource.data.userId != request.auth.uid &&
+        isPartyOf(get(/databases/$(database)/documents/exchanges/$(request.resource.data.exchangeId)).data) &&
+        request.resource.data.userId in [
+          get(/databases/$(database)/documents/exchanges/$(request.resource.data.exchangeId)).data.senderId,
+          get(/databases/$(database)/documents/exchanges/$(request.resource.data.exchangeId)).data.receiverId
+        ];
+
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        onlyChanges(['isRead']);
+
+      allow delete: if false;
+    }
+  }
+}
