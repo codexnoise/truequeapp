@@ -4,7 +4,7 @@ App Flutter de **trueque y donación** entre particulares. Permite publicar art�
 
 - **Mercado objetivo**: Colombia, Ecuador, Perú (Spanish-speaking LATAM)
 - **App ID Android**: `com.truequeapp.truequeapp`
-- **Firebase project**: `truequeapp-c2f82` (funciones: `us-central1`, salvo `notifyNewItem` en `southamerica-west1`; Firestore está en `southamerica-west1`)
+- **Firebase project**: `truequeapp-c2f82` (funciones: `us-central1`, salvo `notifyNewItem` en `southamerica-west1` y `throttlePasswordResetEmail` en `us-east1`; Firestore está en `southamerica-west1`)
 - **Estado actual**: publicada en Producción en Play Store (Android). iOS aún no está en App Store.
 
 ---
@@ -161,6 +161,7 @@ Directorio: `functions/` (Node.js 22). El código no fija región. Las funciones
 | `updateNotificationStatus` | `exchanges/{id}` onUpdate | Cascada de cancelaciones, cierre de exchanges padres, push de cambio de estado |
 | `sendMessageNotification` | `notifications/{id}` onCreate | Push para nuevos mensajes |
 | `findEmailByPhone` | callable, **sin sesión**, `us-central1` | Pista de recuperación: devuelve solo el email enmascarado del usuario con ese teléfono (lógica pura en `functions/phone_lookup.js`). Reemplaza la consulta directa a `users` desde la app (1.1.1+) |
+| `throttlePasswordResetEmail` | Auth blocking `beforeEmailSent` (requiere **Identity Platform**), `us-east1` (la ubicó el CLI el 2026-10-30; la consola no muestra este evento, el `deploy` lo registra solo) | Límite de "Restablecer contraseña": antes de que Firebase envíe el correo, registra la fecha en `password_reset_requests/{sha256(email)}` (solo Admin SDK) y bloquea otro envío mientras el enlace anterior siga activo (1 hora, lo que dura el enlace de Firebase). Aplica a todas las versiones de la app y a llamadas directas a la API de Auth. Lógica pura en `functions/password_reset_cooldown.js` |
 | `notifyNewItem` | `items/{id}` onCreate | Push "artículo nuevo" a todos los usuarios con token, excepto el autor y quienes tengan `notifyNewItems == false` (lógica pura en `functions/new_item_recipients.js`) |
 
 > Importante: las notificaciones de intercambios (`exchange_*`) las crean las Cloud Functions. La excepción son los mensajes de chat: la app crea el documento `notifications/*` con `type: new_message` y `sendMessageNotification` envía el push (ignora los demás tipos para no duplicar).
