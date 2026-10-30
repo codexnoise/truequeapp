@@ -1,11 +1,14 @@
 const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { beforeEmailSent } = require('firebase-functions/v2/identity');
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 
 admin.initializeApp();
 
 const { selectNewItemRecipients, buildNewItemText } = require('./new_item_recipients');
 const { maskEmail, normalizePhone } = require('./phone_lookup');
+const { RESET_COOLDOWN_MS, normalizeEmail, cooldownRemainingMs } = require('./password_reset_cooldown');
 
 async function createInAppNotification({ userId, exchangeId, type, title, body, senderId, senderName }) {
   if (!userId || !type || !title) return null;
@@ -1049,3 +1052,49 @@ exports.findEmailByPhone = onCall(
     return { maskedEmail: maskEmail(snap.docs[0].get('email')) };
   }
 );
+
+/**
+ * Throttle for "Restablecer contraseña": Auth blocking function that runs
+ * before Firebase sends a password-reset email (from any app version, or a
+ * direct call to the Auth API). Records when a reset was requested for an
+ * address and blocks a new email while the previous link (valid 1 hour) is
+ * still active. Docs are keyed by sha256(email) and readable only by the
+ * Admin SDK (no rule matches `password_reset_requests`).
+ * Requires Firebase Authentication with Identity Platform.
+ */
+exports.throttlePasswordResetEmail = beforeEmailSent(async (event) => {
+  if (event.emailType !== 'PASSWORD_RESET') return;
+
+  const email = normalizeEmail(
+    (event.additionalUserInfo && event.additionalUserInfo.email) ||
+    (event.data && event.data.email)
+  );
+  if (!email) return;
+
+  const id = crypto.createHash('sha256').update(email).digest('hex');
+  const ref = admin.firestore().collection('password_reset_requests').doc(id);
+
+  const remainingMs = await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const nowMs = Date.now();
+    const last = snap.exists ? snap.get('requestedAt') : null;
+    const remaining = cooldownRemainingMs(last ? last.toMillis() : null, nowMs);
+    if (remaining > 0) return remaining;
+
+    tx.set(ref, {
+      requestedAt: admin.firestore.Timestamp.fromMillis(nowMs),
+      // For an optional Firestore TTL policy on this field.
+      expireAt: admin.firestore.Timestamp.fromMillis(nowMs + RESET_COOLDOWN_MS),
+    });
+    return 0;
+  });
+
+  if (remainingMs > 0) {
+    const minutes = Math.ceil(remainingMs / 60000);
+    console.log(`Password reset blocked (active link), ${minutes} min left`);
+    throw new HttpsError(
+      'resource-exhausted',
+      `Ya te enviamos un enlace que sigue activo. Revisa tu correo (también spam) y úsalo, o espera ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'} para pedir otro.`
+    );
+  }
+});
